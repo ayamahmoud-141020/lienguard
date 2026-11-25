@@ -202,6 +202,6 @@ Original questions:
 | S-6 | Matching | S-2, S-5 | checking |
 | S-7 | Rules, exposure, decision | S-6 | checking |
 | S-8 | Pipeline + E2E | S-3, S-4, S-7 | checking |
-| S-9 | DB, API, screens | S-8 | agreed |
+| S-9 | DB, API, screens | S-8 | checking |
 | S-10 | Email drafts and send | S-7, S-9 | agreed |
 | S-11 | Security, health, deploy, README | S-9, S-10 | agreed |
