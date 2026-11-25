@@ -1,0 +1,57 @@
+{
+  "kind": "waiver",
+  "waiver": {
+    "claimantName": {
+      "value": "BlueLine Plumbing Co.",
+      "confidence": 0.82,
+      "sourceText": "BlueLine Plumbing Co."
+    },
+    "customerName": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "projectName": {
+      "value": "Riverside Medical Office",
+      "confidence": 0.8,
+      "sourceText": "Riverside Medical Office"
+    },
+    "type": {
+      "value": "unconditional",
+      "confidence": 0.96,
+      "sourceText": "UNCONDITIONAL WAIVER AND RELEASE ON PROGRESS PAYMENT"
+    },
+    "scope": {
+      "value": "progress",
+      "confidence": 0.96,
+      "sourceText": "UNCONDITIONAL WAIVER AND RELEASE ON PROGRESS PAYMENT"
+    },
+    "amount": {
+      "value": "$11,000.00",
+      "confidence": 0.42,
+      "sourceText": "$11,0_ _.00"
+    },
+    "throughDate": {
+      "value": "October 31, 2026",
+      "confidence": 0.66,
+      "sourceText": "October 31, 2026"
+    },
+    "signed": {
+      "value": true,
+      "confidence": 0.93,
+      "sourceText": "[handwritten signature] Sam Ortiz"
+    },
+    "notarized": {
+      "value": false,
+      "confidence": 0.92,
+      "sourceText": ""
+    },
+    "exceptions": {
+      "value": null,
+      "confidence": 0.9,
+      "sourceText": "Exceptions: none"
+    }
+  },
+  "coi": null,
+  "notes": "Low-quality scan; the payment amount is partly illegible."
+}

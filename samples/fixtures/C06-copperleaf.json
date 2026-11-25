@@ -1,0 +1,22 @@
+{
+  "kind": "coi",
+  "waiver": null,
+  "coi": {
+    "insuredName": {
+      "value": "Copperleaf Roofing LLC",
+      "confidence": 0.96,
+      "sourceText": "Copperleaf Roofing LLC"
+    },
+    "certificateHolder": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "glExpiry": {
+      "value": "11/10/2026",
+      "confidence": 0.94,
+      "sourceText": "COMMERCIAL GENERAL LIABILITY LPM-GL-29004 11/10/2025 11/10/2026"
+    }
+  },
+  "notes": ""
+}

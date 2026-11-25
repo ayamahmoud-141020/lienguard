@@ -1,0 +1,22 @@
+{
+  "kind": "coi",
+  "waiver": null,
+  "coi": {
+    "insuredName": {
+      "value": "Summit Air Mechanical, LLC",
+      "confidence": 0.96,
+      "sourceText": "Summit Air Mechanical, LLC"
+    },
+    "certificateHolder": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "glExpiry": {
+      "value": "03/31/2027",
+      "confidence": 0.94,
+      "sourceText": "COMMERCIAL GENERAL LIABILITY GL-7731-0042 03/31/2026 03/31/2027"
+    }
+  },
+  "notes": ""
+}

@@ -1,0 +1,147 @@
+{
+  "today": "2026-11-20",
+  "batchExposedCents": 16250000,
+  "payments": [
+    {
+      "id": "PAY-01",
+      "sub": "SUM",
+      "project": "RVR",
+      "scenario": "Perfect: unconditional for the full amount, signed, insurance valid",
+      "paid": true,
+      "decision": "SAFE",
+      "ruleIds": [],
+      "exposedCents": 0
+    },
+    {
+      "id": "PAY-02",
+      "sub": "BLU",
+      "project": "LKV",
+      "scenario": "Waiver says $18,000 but $20,000 was paid",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R02"
+      ],
+      "exposedCents": 200000
+    },
+    {
+      "id": "PAY-03",
+      "sub": "BLU",
+      "project": "LKV",
+      "scenario": "Texas project, waiver not notarized",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R06"
+      ],
+      "exposedCents": 1500000
+    },
+    {
+      "id": "PAY-04",
+      "sub": "BRW",
+      "project": "PRK",
+      "scenario": "Paid 14 days ago, only a conditional waiver",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R03"
+      ],
+      "exposedCents": 1250000
+    },
+    {
+      "id": "PAY-05",
+      "sub": "BRW",
+      "project": "PRK",
+      "scenario": "Not paid yet, conditional waiver on file: ready to pay",
+      "paid": false,
+      "decision": "SAFE",
+      "ruleIds": [],
+      "exposedCents": 0
+    },
+    {
+      "id": "PAY-06",
+      "sub": "GRN",
+      "project": "RVR",
+      "scenario": "No waiver received",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R01"
+      ],
+      "exposedCents": 3000000
+    },
+    {
+      "id": "PAY-07",
+      "sub": "NOR",
+      "project": "LKV",
+      "scenario": "Final payment, but only a progress waiver",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R07"
+      ],
+      "exposedCents": 4500000
+    },
+    {
+      "id": "PAY-08",
+      "sub": "NOR",
+      "project": "PRK",
+      "scenario": "Waiver not signed",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R05"
+      ],
+      "exposedCents": 800000
+    },
+    {
+      "id": "PAY-09",
+      "sub": "COP",
+      "project": "PRK",
+      "scenario": "Insurance expired Nov 10, paid Nov 15",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R09"
+      ],
+      "exposedCents": 0
+    },
+    {
+      "id": "PAY-10",
+      "sub": "GRN",
+      "project": "PRK",
+      "scenario": "Waiver $22,000 through Sep 30: amount and date both short (exposure = max, not sum)",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R02",
+        "R04"
+      ],
+      "exposedCents": 2500000
+    },
+    {
+      "id": "PAY-11",
+      "sub": "BLU",
+      "project": "RVR",
+      "scenario": "Blurry scanned waiver: amount unreadable",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R12"
+      ],
+      "exposedCents": 1100000
+    },
+    {
+      "id": "PAY-12",
+      "sub": "SUM",
+      "project": "PRK",
+      "scenario": "Prompt-injection text inside a conditional waiver (must not be obeyed)",
+      "paid": true,
+      "decision": "HOLD",
+      "ruleIds": [
+        "R03"
+      ],
+      "exposedCents": 1400000
+    }
+  ]
+}
