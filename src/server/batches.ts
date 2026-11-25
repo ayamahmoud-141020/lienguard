@@ -34,30 +34,45 @@ const dbCache: ExtractionCache = {
   },
 };
 
-async function insertDocuments(batchId: string, files: { fileName: string; bytes: Uint8Array }[]) {
-  for (const d of dedupeDocuments(files)) {
-    await prisma.document.upsert({
-      where: { batchId_sha256: { batchId, sha256: d.sha256 } },
-      create: { batchId, fileName: d.fileName, sha256: d.sha256, bytes: Buffer.from(d.bytes) },
-      update: {},
-    });
-  }
+/** Persistence used when creating batches. Prisma in the app; an in-memory version in tests. */
+export interface BatchStore {
+  countBatches(): Promise<number>;
+  createBatch(b: { name: string; today: string; input: BatchInput }): Promise<string>;
+  /** Must keep one document per (batchId, sha256), like the DB unique key. */
+  upsertDocument(d: { batchId: string; fileName: string; sha256: string; bytes: Uint8Array }): Promise<void>;
 }
 
-export async function createSampleBatch(): Promise<string> {
-  const env = loadEnv();
-  const { input, errors } = readBatchSpreadsheets(readFileSync(join(SAMPLES_DIR, "payments.xlsx")), readFileSync(join(SAMPLES_DIR, "subcontractors.xlsx")));
+export const prismaBatchStore: BatchStore = {
+  countBatches: () => prisma.batch.count(),
+  async createBatch(b) {
+    const row = await prisma.batch.create({ data: { name: b.name, today: b.today, inputJson: b.input as unknown as Prisma.InputJsonValue } });
+    return row.id;
+  },
+  async upsertDocument(d) {
+    await prisma.document.upsert({
+      where: { batchId_sha256: { batchId: d.batchId, sha256: d.sha256 } },
+      create: { batchId: d.batchId, fileName: d.fileName, sha256: d.sha256, bytes: Buffer.from(d.bytes) },
+      update: {},
+    });
+  },
+};
+
+async function insertDocuments(store: BatchStore, batchId: string, files: { fileName: string; bytes: Uint8Array }[]) {
+  for (const d of dedupeDocuments(files)) await store.upsertDocument({ batchId, fileName: d.fileName, sha256: d.sha256, bytes: d.bytes });
+}
+
+/** Creates a new batch from samples/ every time it is called (each click is its own batch). */
+export async function createSampleBatch(store: BatchStore = prismaBatchStore, samplesDir: string = SAMPLES_DIR, today: string = loadEnv().DEMO_TODAY): Promise<string> {
+  const { input, errors } = readBatchSpreadsheets(readFileSync(join(samplesDir, "payments.xlsx")), readFileSync(join(samplesDir, "subcontractors.xlsx")));
   if (errors.length) throw new Error("sample spreadsheets are invalid");
-  const count = await prisma.batch.count();
-  const batch = await prisma.batch.create({
-    data: { name: `Sample batch #${count + 1} · November payments`, today: env.DEMO_TODAY, inputJson: input as unknown as Prisma.InputJsonValue },
-  });
-  const files = readdirSync(join(SAMPLES_DIR, "pdfs"))
+  const count = await store.countBatches();
+  const batchId = await store.createBatch({ name: `Sample batch #${count + 1} · November payments`, today, input });
+  const files = readdirSync(join(samplesDir, "pdfs"))
     .filter((f) => f.endsWith(".pdf"))
     .sort()
-    .map((fileName) => ({ fileName, bytes: new Uint8Array(readFileSync(join(SAMPLES_DIR, "pdfs", fileName))) }));
-  await insertDocuments(batch.id, files);
-  return batch.id;
+    .map((fileName) => ({ fileName, bytes: new Uint8Array(readFileSync(join(samplesDir, "pdfs", fileName))) }));
+  await insertDocuments(store, batchId, files);
+  return batchId;
 }
 
 export async function createUploadBatch(name: string, paymentsXlsx: Uint8Array, subsXlsx: Uint8Array): Promise<{ id: string | null; errors: RowError[] }> {
@@ -71,7 +86,7 @@ export async function createUploadBatch(name: string, paymentsXlsx: Uint8Array, 
 }
 
 export async function addDocument(batchId: string, fileName: string, bytes: Uint8Array): Promise<void> {
-  await insertDocuments(batchId, [{ fileName, bytes }]);
+  await insertDocuments(prismaBatchStore, batchId, [{ fileName, bytes }]);
   await prisma.batch.update({ where: { id: batchId }, data: { status: "processing" } });
 }
 

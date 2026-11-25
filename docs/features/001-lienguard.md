@@ -184,7 +184,7 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-1 | Skeleton: Next.js, Prisma 6, Tailwind, Vitest, CI, env schema | AC-1.1–1.2 | — | `package.json`, `src/env.ts`, `prisma/schema.prisma` |
 | S-2 | Domain: money, dates, name normalization | AC-2.1–2.5 | S-1 | `src/domain/{money,dates,types}.ts`, `src/domain/matching/normalize.ts` |
 | S-3 | Spreadsheet ingest with Zod | AC-3.1–3.4 | S-2 | `src/ingest/spreadsheets.ts` |
-| S-4 | Sample generator, fixtures, expected.json | AC-4.1–4.4 | S-2 | `scripts/generate-samples.ts`, `samples/**` |
+| S-4 | Sample generator, fixtures, expected.json | AC-4.1–4.4 | S-2 | `scripts/{generate-samples,sample-scenarios}.ts`, `samples/**` |
 | S-5 | Extraction: schemas, toDocument, fixture/Anthropic extractors, cache | AC-5.1–5.6 | S-2 | `src/ai/*` |
 | S-6 | Matching | AC-6.1–6.5 | S-2, S-5 | `src/domain/matching/match.ts` |
 | S-7 | Rules, exposure, decision | AC-7.1–7.14 | S-6 | `src/domain/rules/*`, `src/domain/{exposure,decision}.ts`, `config/states.json` |
