@@ -14,8 +14,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:unit": "vitest run --dir tests/unit",
-    "test:e2e": "vitest run --dir tests/e2e",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "vitest run tests/e2e",
     "samples": "tsx scripts/generate-samples.ts",
     "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
