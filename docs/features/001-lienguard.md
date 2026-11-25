@@ -177,19 +177,21 @@ Original questions:
 - **Q3, conditional waiver within the grace period.** Paid ≤ 5 days ago with only a conditional waiver. Proposed: **SAFE, no finding** (there are no warn rules in the MVP).
 
 ## 9. Stories
+_File lists updated 2026-11-25 after the first check report to match where the code actually lives (no scope change)._
+
 | Story | Title | ACs | Depends on | Likely files |
 |---|---|---|---|---|
 | S-1 | Skeleton: Next.js, Prisma 6, Tailwind, Vitest, CI, env schema | AC-1.1–1.2 | — | `package.json`, `src/env.ts`, `prisma/schema.prisma` |
-| S-2 | Domain: money, dates, name normalization | AC-2.1–2.5 | S-1 | `src/domain/{money,dates}.ts`, `src/domain/matching/normalize.ts` |
+| S-2 | Domain: money, dates, name normalization | AC-2.1–2.5 | S-1 | `src/domain/{money,dates,types}.ts`, `src/domain/matching/normalize.ts` |
 | S-3 | Spreadsheet ingest with Zod | AC-3.1–3.4 | S-2 | `src/ingest/spreadsheets.ts` |
 | S-4 | Sample generator, fixtures, expected.json | AC-4.1–4.4 | S-2 | `scripts/generate-samples.ts`, `samples/**` |
 | S-5 | Extraction: schemas, toDocument, fixture/Anthropic extractors, cache | AC-5.1–5.6 | S-2 | `src/ai/*` |
 | S-6 | Matching | AC-6.1–6.5 | S-2, S-5 | `src/domain/matching/match.ts` |
 | S-7 | Rules, exposure, decision | AC-7.1–7.14 | S-6 | `src/domain/rules/*`, `src/domain/{exposure,decision}.ts`, `config/states.json` |
-| S-8 | Batch pipeline + E2E on samples | AC-8.1–8.3 | S-3, S-4, S-7 | `src/pipeline/run-batch.ts`, `tests/e2e/samples.test.ts` |
-| S-9 | DB, API and screens: sample batch, processing, dashboard, detail | AC-9.1–9.4 | S-8 | `src/db/*`, `src/app/**` |
-| S-10 | Email writer, post-check, drafts, Resend send, audit | AC-10.1–10.9 | S-7, S-9 | `src/ai/email-*`, `src/ai/postcheck.ts`, `src/email/*`, `src/app/**/drafts` |
-| S-11 | Passcode, upload checks, health, deploy, README | AC-11.1–11.4 | S-9, S-10 | `src/lib/guard.ts`, `src/app/api/health`, `README.md` |
+| S-8 | Batch pipeline + E2E on samples | AC-8.1–8.3 | S-3, S-4, S-7 | `src/pipeline/{run-batch,evaluate,samples}.ts`, `tests/e2e/samples.test.ts` |
+| S-9 | DB, API and screens: sample batch, processing, dashboard, detail | AC-9.1–9.4 | S-8 | `src/db/*`, `src/server/{batches,guard,uploads,audit}.ts`, `src/view/models.ts`, `src/lib/queue.ts`, `src/pipeline/documents.ts`, `prisma/migrations/**`, `src/app/**` |
+| S-10 | Email writer, post-check, drafts, Resend send, audit | AC-10.1–10.9 | S-7, S-9 | `src/email/*` (writer, postcheck, issues, sender, workflow), `src/server/drafts.ts`, `src/app/**/drafts`, `src/app/**/audit` |
+| S-11 | Passcode, upload checks, health, deploy, README | AC-11.1–11.4 | S-9, S-10 | `src/server/{guard,uploads,health}.ts`, `src/app/api/health`, `README.md` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |

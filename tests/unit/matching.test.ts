@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { matchDocuments, matchByName } from "@/domain/matching/match";
+import { evaluateBatch } from "@/pipeline/evaluate";
 import type { Coi, Payment, Project, Subcontractor, Waiver } from "@/domain/types";
 
 const subs: Subcontractor[] = [
@@ -57,6 +58,26 @@ describe("S-6 matching", () => {
     const r = matchDocuments({ subs, projects, payments: [pay("P1", "SUM", "RVR", "2026-10-31")], waivers: [waiver({ claimantName: "Acme Totally Different Glazing" })], cois: [] });
     expect(r.waivers[0]?.paymentId ?? null).toBeNull();
     expect(r.unmatched).toEqual([{ documentId: "w1", fileName: "w1.pdf", reason: "no subcontractor match" }]);
+  });
+
+  it("AC-6.4 the unmatched document becomes needsReview in the batch result", () => {
+    const f = <T,>(value: T) => ({ value, confidence: 0.95, sourceText: String(value) });
+    const result = evaluateBatch(
+      { subs, projects, payments: [pay("P1", "SUM", "RVR", "2026-10-31")] },
+      [{
+        id: "w1", fileName: "w1.pdf",
+        outcome: { ok: true, extraction: { kind: "waiver", coi: null, notes: "", waiver: {
+          claimantName: f("Acme Totally Different Glazing"), customerName: f("GC"), projectName: f("Riverside Medical Office"),
+          type: f("unconditional" as const), scope: f("progress" as const), amount: f("$1.00"), throughDate: f("2026-10-31"),
+          signed: f(true), notarized: f(false), exceptions: f(null),
+        } } },
+      }],
+      "2026-11-20",
+    );
+    const doc = result.documents.find((d) => d.id === "w1");
+    expect(doc?.needsReview).toBe(true);
+    expect(doc?.reviewReasons).toContain("no subcontractor match");
+    expect(result.unmatched.map((u) => u.documentId)).toContain("w1");
   });
 
   it("AC-6.5 a COI matches its sub by insured name", () => {

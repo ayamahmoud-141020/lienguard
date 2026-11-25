@@ -70,8 +70,11 @@ describe("S-9 screens", () => {
   it("AC-9.4 payment detail lists matched documents and a PASS/HOLD line per rule", async () => {
     const detail = buildPaymentDetail(await sampleResult(), "PAY-10");
     expect(detail?.documents.map((d) => d.fileName).sort()).toEqual(["C04-granite.pdf", "W10-granite-PRK.pdf"]);
+    // Exactly one line per MVP rule, each PASS or HOLD.
+    expect(detail?.rules.map((r) => r.ruleId)).toEqual(["R01", "R02", "R03", "R04", "R05", "R06", "R07", "R09", "R12"]);
     const byRule = Object.fromEntries((detail?.rules ?? []).map((r) => [r.ruleId, r.status]));
-    expect(byRule).toMatchObject({ R01: "PASS", R02: "HOLD", R04: "HOLD", R05: "PASS", R09: "PASS", R12: "PASS" });
+    expect(byRule).toEqual({ R01: "PASS", R02: "HOLD", R03: "PASS", R04: "HOLD", R05: "PASS", R06: "PASS", R07: "PASS", R09: "PASS", R12: "PASS" });
+    for (const r of detail?.rules ?? []) expect(r.message.length).toBeGreaterThan(0);
     expect(detail?.rules.find((r) => r.ruleId === "R02")?.message).toContain("$3,000.00");
   });
 });

@@ -49,7 +49,7 @@ LienGuard takes the payments spreadsheet and the PDFs that arrived. For every pa
 
 I built LienGuard with **Claude Code**, using a small "software factory" I set up for working with AI agents in a disciplined way:
 
-- **Spec before code:** [`docs/features/001-lienguard.md`](docs/features/001-lienguard.md) has 14 requirements, 54 acceptance criteria and 11 stories. A human approved it (**Gate A**) before any product code was written.
+- **Spec before code:** [`docs/features/001-lienguard.md`](docs/features/001-lienguard.md) has 14 requirements, 60 acceptance criteria and 11 stories. A human approved it (**Gate A**) before any product code was written.
 - **Test first:** every story started with failing tests named after their acceptance criteria (e.g. `AC-7.12 R02 + R04 on one payment → exposure is the max, not the sum`), then the minimal code, then one commit per story (`story(S-n): …`).
 - **An answer key written by hand:** [`samples/EXPECTED.md`](samples/EXPECTED.md) lists the expected decision for all 12 sample payments. The end-to-end test runs the whole pipeline (with recorded extractions, no network) and must match it exactly.
 - **Independent auditor:** a separate agent ([`.claude/agents/auditor.md`](.claude/agents/auditor.md)) that never sees the builder's reasoning reruns lint, typecheck and tests, and maps every acceptance criterion to a test. Reports are in [`docs/checks/`](docs/checks/).

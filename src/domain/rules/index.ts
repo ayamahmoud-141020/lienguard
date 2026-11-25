@@ -17,7 +17,8 @@ export type PaymentContext = {
   today: IsoDate;
 };
 
-export type RuleStatus = "PASS" | "HOLD" | "N/A";
+/** PASS = this rule does not block the payment (including "not applicable"); HOLD = it does. */
+export type RuleStatus = "PASS" | "HOLD";
 export type RuleResult = { ruleId: RuleId; name: string; status: RuleStatus; message: string; exposedCents: Cents };
 
 export type PaymentEvaluation = {
@@ -81,7 +82,7 @@ export function evaluatePayment(ctx: PaymentContext): PaymentEvaluation {
   } else add("R01", "PASS", "A lien waiver is on file.");
 
   if (!best) {
-    for (const id of ["R02", "R03", "R04", "R05", "R06", "R07"] as const) add(id, "N/A", "No readable waiver to check.");
+    for (const id of ["R02", "R03", "R04", "R05", "R06", "R07"] as const) add(id, "PASS", "Not checked: no readable waiver (see R01 / R12).");
   } else {
     const wAmt = best.amountCents ?? 0;
     if (wAmt < p.amountCents) {
@@ -103,16 +104,16 @@ export function evaluatePayment(ctx: PaymentContext): PaymentEvaluation {
 
     if (stateConfig.requiresNotary && best.notarized === false) {
       add("R06", "HOLD", `${ctx.state} requires a notarized waiver (demo setting); this one is not notarized.`, full);
-    } else add("R06", stateConfig.requiresNotary ? "PASS" : "N/A", stateConfig.requiresNotary ? "The waiver is notarized." : `${ctx.state} doesn't require notarization (demo setting).`);
+    } else add("R06", "PASS", stateConfig.requiresNotary ? "The waiver is notarized." : `${ctx.state} doesn't require notarization (demo setting).`);
 
     if (p.isFinal && best.scope === "progress") add("R07", "HOLD", "This is the final payment but the waiver is a progress waiver; a final waiver is needed.", full);
-    else add("R07", p.isFinal ? "PASS" : "N/A", p.isFinal ? "Final waiver on file for the final payment." : "Not a final payment.");
+    else add("R07", "PASS", p.isFinal ? "Final waiver on file for the final payment." : "Not a final payment.");
   }
 
   // R09: insurance. A hold reason only; no lien exposure (Gate A, Q2).
   const asOf = p.paidDate ?? today;
   if (!ctx.coi) add("R09", "HOLD", "No certificate of insurance on file for this subcontractor.");
-  else if (ctx.coi.needsReview || !ctx.coi.glExpiry) add("R09", "N/A", "Certificate couldn't be read; see R12.");
+  else if (ctx.coi.needsReview || !ctx.coi.glExpiry) add("R09", "PASS", "Not checked: the certificate couldn't be read (see R12).");
   else if (compareDates(ctx.coi.glExpiry, asOf) < 0) {
     add("R09", "HOLD", `General liability insurance expired on ${formatDate(ctx.coi.glExpiry)}, before ${p.paidDate ? `the payment date ${formatDate(asOf)}` : `today (${formatDate(asOf)})`}.`);
   } else add("R09", "PASS", `Insurance valid until ${formatDate(ctx.coi.glExpiry)}.`);
