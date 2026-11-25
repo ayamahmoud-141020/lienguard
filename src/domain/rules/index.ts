@@ -27,6 +27,8 @@ export type PaymentEvaluation = {
   findings: Finding[];
   results: RuleResult[];
   waiverUsed: Waiver | null;
+  /** GL expiry of the certificate used for R09 (null if none or unreadable). */
+  coiExpiry: IsoDate | null;
 };
 
 export const RULE_NAMES: Record<RuleId, string> = {
@@ -127,6 +129,7 @@ export function evaluatePayment(ctx: PaymentContext): PaymentEvaluation {
     findings,
     results,
     waiverUsed: best,
+    coiExpiry: ctx.coi && !ctx.coi.needsReview ? ctx.coi.glExpiry : null,
   };
 }
 
