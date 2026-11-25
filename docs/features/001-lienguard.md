@@ -195,7 +195,7 @@ Original questions:
 | Story | Title | Depends on | Stage |
 |---|---|---|---|
 | S-1 | Skeleton | — | checking |
-| S-2 | Domain basics | S-1 | agreed |
+| S-2 | Domain basics | S-1 | checking |
 | S-3 | Spreadsheet ingest | S-2 | agreed |
 | S-4 | Sample data | S-2 | agreed |
 | S-5 | Extraction | S-2 | agreed |
