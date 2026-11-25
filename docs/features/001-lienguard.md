@@ -1,6 +1,6 @@
 # Feature 001: LienGuard MVP (safe-to-pay check)
 
-**Status:** draft. Awaiting Gate A.
+**Status:** agreed. Gate A passed: Aya, 2026-11-25 ("agreed, 1a, yes, yes, public").
 **Request:** `docs/requests/001-lienguard.md` · **Plan:** `PLAN.md` Part A · **ADRs:** 0001–0006
 
 ## 1. Goal
@@ -105,7 +105,7 @@ Base case for each AC unless it says otherwise:
 - **AC-7.6** [R-7] R06: TX project, waiver not notarized → HOLD R06, exposure $20,000. The same waiver on an AZ project → no R06.
 - **AC-7.7** [R-7] R07: payment final, waiver scope progress → HOLD R07, exposure $20,000.
 - **AC-7.8** [R-7] R09: no COI → HOLD R09. COI expired 2026-11-10 and paid 2026-11-15 → HOLD R09. For an unpaid payment the comparison date is today. R09 exposure is $0.
-- **AC-7.9** [R-4, R-7] R12: the matched waiver is `needsReview` → HOLD R12, exposure $20,000 *(proposed; see Q1)*. That waiver is not used by R02–R07.
+- **AC-7.9** [R-4, R-7] R12: the matched waiver is `needsReview` → HOLD R12, exposure $20,000 (Q1 → a). That waiver is not used by R02–R07.
 - **AC-7.10** [R-8] The base case → SAFE, no findings, exposure $0.
 - **AC-7.11** [R-8] Unpaid, conditional waiver for the full amount, valid COI → SAFE ("ready to pay").
 - **AC-7.12** [R-8] Waiver $18,000 through 2026-09-30 → findings R02 and R04; exposure $20,000 (the max), not $22,000.
@@ -163,7 +163,13 @@ Base case for each AC unless it says otherwise:
 | Vercel 4.5 MB / 300 s | One PDF per request, 4 MB cap |
 | Time (ship tomorrow) | Cut order in PLAN.md §A.7 |
 
-## 8. Open questions (please answer at Gate A)
+## 8. Open questions: answered at Gate A (2026-11-25)
+- **Q1 → (a)** R12 exposure = full paid amount.
+- **Q2 → yes** R09 exposure = $0.
+- **Q3 → yes** conditional within grace = SAFE, no finding.
+- **Q4 → public** repo `ayamahmoud-141020/lienguard`.
+
+Original questions:
 - **Q1, R12 exposure.** When the matched waiver can't be read reliably, what is the payment's exposure?
   - (a) **The full paid amount** *(recommended: we can't prove any coverage, so fail safe)*
   - (b) $0, shown as "unquantified"
@@ -188,14 +194,14 @@ Base case for each AC unless it says otherwise:
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
 |---|---|---|---|
-| S-1 | Skeleton | — | draft |
-| S-2 | Domain basics | S-1 | draft |
-| S-3 | Spreadsheet ingest | S-2 | draft |
-| S-4 | Sample data | S-2 | draft |
-| S-5 | Extraction | S-2 | draft |
-| S-6 | Matching | S-2, S-5 | draft |
-| S-7 | Rules, exposure, decision | S-6 | draft |
-| S-8 | Pipeline + E2E | S-3, S-4, S-7 | draft |
-| S-9 | DB, API, screens | S-8 | draft |
-| S-10 | Email drafts and send | S-7, S-9 | draft |
-| S-11 | Security, health, deploy, README | S-9, S-10 | draft |
+| S-1 | Skeleton | — | agreed |
+| S-2 | Domain basics | S-1 | agreed |
+| S-3 | Spreadsheet ingest | S-2 | agreed |
+| S-4 | Sample data | S-2 | agreed |
+| S-5 | Extraction | S-2 | agreed |
+| S-6 | Matching | S-2, S-5 | agreed |
+| S-7 | Rules, exposure, decision | S-6 | agreed |
+| S-8 | Pipeline + E2E | S-3, S-4, S-7 | agreed |
+| S-9 | DB, API, screens | S-8 | agreed |
+| S-10 | Email drafts and send | S-7, S-9 | agreed |
+| S-11 | Security, health, deploy, README | S-9, S-10 | agreed |
