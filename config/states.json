@@ -1,0 +1,7 @@
+{
+  "_note": "Demo defaults only. Lien law differs by state and changes; the user must confirm these settings for each state. Not legal advice.",
+  "default": { "requiresNotary": false, "unconditionalGraceDays": 5 },
+  "TX": { "requiresNotary": true, "unconditionalGraceDays": 5 },
+  "CA": { "requiresNotary": false, "unconditionalGraceDays": 5 },
+  "AZ": { "requiresNotary": false, "unconditionalGraceDays": 5 }
+}
