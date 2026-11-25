@@ -6,6 +6,7 @@ import { loadEnv } from "@/env";
 import { cachedExtract, type ExtractionCache } from "@/ai/cache";
 import { AnthropicExtractor } from "@/ai/anthropic-extractor";
 import { Extraction } from "@/ai/schemas";
+import { toDocument } from "@/ai/to-document";
 import type { ExtractOutcome, Extractor } from "@/ai/extractor";
 import { evaluateBatch, type BatchInput, type BatchResult, type ExtractedDocument } from "@/pipeline/evaluate";
 import { loadFixtureExtractor, readBatchSpreadsheets } from "@/pipeline/samples";
@@ -79,7 +80,7 @@ export async function extractDocument(batchId: string, documentId: string): Prom
   const doc = await prisma.document.findFirst({ where: { id: documentId, batchId } });
   if (!doc) throw new Error("document not found");
   const outcome = await cachedExtract(getExtractor(), dbCache, { bytes: new Uint8Array(doc.bytes), fileName: doc.fileName });
-  const review = !outcome.ok || outcome.extraction.kind === "unknown";
+  const review = !outcome.ok || toDocument(outcome.extraction, { documentId: doc.id, fileName: doc.fileName }).needsReview;
   await prisma.document.update({
     where: { id: doc.id },
     data: { extractionJson: outcome as unknown as Prisma.InputJsonValue, status: review ? "needs_review" : "done" },
