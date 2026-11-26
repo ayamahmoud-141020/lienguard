@@ -1,4 +1,4 @@
-import { Panel, Skeleton } from "@/components/ui/layout";
+import { Panel, Skeleton } from "@/components/app/layout";
 
 export default function Loading() {
   return (

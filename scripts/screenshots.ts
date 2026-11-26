@@ -18,6 +18,16 @@ const shot = async (page: Page, name: string, fullPage = true) => {
   console.log("saved", name);
 };
 
+async function narrowShot(browser: import("playwright").Browser, url: string, name: string) {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
+  const p = await ctx.newPage();
+  await p.goto(url);
+  await p.waitForLoadState("networkidle");
+  await p.screenshot({ path: join(OUT, `${name}.png`) });
+  console.log("saved", name);
+  await ctx.close();
+}
+
 async function main() {
   const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
@@ -37,7 +47,6 @@ async function main() {
   await shot(page, "03-reason-tooltip", false);
 
   await page.getByRole("radio", { name: /^Hold/ }).click();
-  await page.getByLabel("Project").selectOption({ label: "Parkway Retail Center" }).catch(() => undefined);
   await shot(page, "04-dashboard-filtered", false);
 
   await page.goto(`${batchUrl}/payments/PAY-02`);
@@ -51,7 +60,7 @@ async function main() {
   await page.getByRole("button", { name: /Draft follow-up emails/ }).click();
   await page.waitForURL(/\/drafts$/);
   await page.locator("article").first().waitFor();
-  await shot(page, "08-emails-locked");
+  await shot(page, "08-emails-locked", false);
 
   await page.getByRole("button", { name: /Demo access/ }).click();
   await page.waitForTimeout(250);
@@ -61,15 +70,21 @@ async function main() {
   await page.getByRole("button", { name: "Save" }).click();
   await page.waitForTimeout(300);
 
-  const first = page.locator("article").first();
-  await first.getByRole("button", { name: "Approve" }).click();
+  // Master-detail: approve and send the first email, then open the second and edit it.
+  await page.locator("article").getByRole("button", { name: "Approve" }).click();
   await page.waitForTimeout(800);
-  await page.locator("article").first().getByRole("button", { name: "Send" }).click();
+  await page.locator("article").getByRole("button", { name: "Send" }).click();
   await page.waitForTimeout(1200);
-  await page.locator("article").nth(1).getByLabel("Email body").fill("Hi, please send the waiver for $99,999.00 by Friday.");
   await page.evaluate(() => window.scrollTo(0, 0));
-  await shot(page, "10-emails-review", false);
+  await shot(page, "10a-emails-sent", false);
+  await page.getByRole("navigation", { name: "Subcontractors" }).getByRole("button").nth(1).click();
+  await page.waitForTimeout(300);
+  await shot(page, "10b-emails-preview", false);
+  await page.locator("article").getByRole("button", { name: "Edit" }).click();
+  await page.locator("article").getByLabel("Email body").fill("Hi, please send the waiver for $99,999.00 by Friday.");
+  await shot(page, "10c-emails-editing", false);
 
+  await narrowShot(browser, page.url(), "10d-emails-1280");
   await page.goto(`${batchUrl}/audit`);
   await shot(page, "11-audit-log");
   await page.goto(`${BASE}/about`);

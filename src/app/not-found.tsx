@@ -1,6 +1,6 @@
 import { FileX } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
-import { EmptyState, Panel } from "@/components/ui/layout";
+import { ButtonLink } from "@/components/app/button";
+import { EmptyState, Panel } from "@/components/app/layout";
 
 /** Shown for a deleted or unknown batch, payment or page (replaces the framework's default black 404). */
 export default function NotFound() {

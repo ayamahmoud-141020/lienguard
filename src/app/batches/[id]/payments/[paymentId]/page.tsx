@@ -5,9 +5,9 @@ import { getBatchView, getDocumentReadings } from "@/server/batches";
 import { buildPaymentDetail } from "@/view/models";
 import { formatMoney } from "@/domain/money";
 import { formatDate } from "@/domain/dates";
-import { PageHeader, Panel, PanelHeader } from "@/components/ui/layout";
-import { DecisionBadge, NeedsReviewBadge, Pill } from "@/components/ui/status";
-import { cn } from "@/components/ui/cn";
+import { PageHeader, Panel, PanelHeader } from "@/components/app/layout";
+import { DecisionBadge, NeedsReviewBadge, Pill } from "@/components/app/status";
+import { cn } from "@/components/app/cn";
 import type { ExtractOutcome } from "@/ai/extractor";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +54,7 @@ function Confidence({ value }: { value: number }) {
       <span className="h-1.5 w-14 overflow-hidden rounded-full bg-[#eef1f4]">
         <span className={cn("block h-full rounded-full", low ? "bg-review" : "bg-ink-2")} style={{ width: `${pct}%` }} />
       </span>
-      <span className={cn("num w-8 text-right text-xs", low ? "font-semibold text-review" : "text-muted")}>{pct}%</span>
+      <span className={cn("num w-8 text-right text-xs", low ? "font-semibold text-review" : "text-muted-foreground")}>{pct}%</span>
     </span>
   );
 }
@@ -79,7 +79,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
     <div>
       <PageHeader
         back={
-          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted hover:text-ink">
+          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted-foreground hover:text-ink">
             <ChevronLeft aria-hidden className="size-4" />
             {batch.name}
           </Link>
@@ -101,7 +101,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
           ["Documents matched", String(detail.documents.length), "text-ink"],
         ].map(([k, v, cls]) => (
           <div key={k} className="px-5 py-3">
-            <dt className="text-xs text-muted">{k}</dt>
+            <dt className="text-xs text-muted-foreground">{k}</dt>
             <dd className={cn("num mt-0.5 text-lg font-semibold", cls)}>{v}</dd>
           </div>
         ))}
@@ -116,7 +116,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 <span className="mt-0.5">{ruleIcon[r.status as keyof typeof ruleIcon] ?? ruleIcon.PASS}</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium text-ink">
-                    <span className="num mr-1.5 text-muted">{r.ruleId}</span>
+                    <span className="num mr-1.5 text-muted-foreground">{r.ruleId}</span>
                     {r.name}
                   </p>
                   <p className="mt-0.5 text-[13px] text-ink-2">{r.message}</p>
@@ -129,7 +129,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 
         <div className="space-y-5">
           {detail.documents.length === 0 ? (
-            <Panel className="px-5 py-8 text-center text-[13px] text-muted">No waiver or insurance certificate matched this payment, which is why it is on hold.</Panel>
+            <Panel className="px-5 py-8 text-center text-[13px] text-muted-foreground">No waiver or insurance certificate matched this payment, which is why it is on hold.</Panel>
           ) : null}
           {detail.documents.map((doc) => {
             const fields = fieldsOf(readings.get(doc.id));
@@ -138,7 +138,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 <PanelHeader
                   title={
                     <span className="flex items-center gap-2">
-                      <FileText aria-hidden className="size-4 text-muted" />
+                      <FileText aria-hidden className="size-4 text-muted-foreground" />
                       {doc.fileName}
                     </span>
                   }
@@ -166,7 +166,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 ) : null}
                 {doc.notes ? (
                   <p className="flex gap-2 border-b border-line px-4 py-2 text-[13px] text-ink-2">
-                    <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
+                    <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                     <span>
                       <span className="font-medium text-ink">AI note: </span>
                       {doc.notes}
@@ -177,29 +177,29 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                   <table className="w-full text-[13px]">
                     <thead className="border-b border-line bg-subtle">
                       <tr>
-                        <th className="h-8 px-4 text-left text-xs font-medium text-muted">Field</th>
-                        <th className="h-8 px-2 text-left text-xs font-medium text-muted">Read as</th>
-                        <th className="h-8 px-2 text-left text-xs font-medium text-muted">Confidence</th>
-                        <th className="h-8 px-4 text-left text-xs font-medium text-muted">Source text in the PDF</th>
+                        <th className="h-8 px-4 text-left text-xs font-medium text-muted-foreground">Field</th>
+                        <th className="h-8 px-2 text-left text-xs font-medium text-muted-foreground">Read as</th>
+                        <th className="h-8 px-2 text-left text-xs font-medium text-muted-foreground">Confidence</th>
+                        <th className="h-8 px-4 text-left text-xs font-medium text-muted-foreground">Source text in the PDF</th>
                       </tr>
                     </thead>
                     <tbody>
                       {fields.map((f) => (
                         <tr key={f.key} className="border-b border-line align-top last:border-0">
-                          <td className="px-4 py-2 text-muted">{f.label}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{f.label}</td>
                           <td className="num px-2 py-2 font-medium text-ink">{f.value}</td>
                           <td className="px-2 py-2.5">
                             <Confidence value={f.confidence} />
                           </td>
                           <td className="px-4 py-2 text-ink-2">
-                            {f.sourceText ? <q className="text-ink-2 [quotes:'“'_'”']">{f.sourceText}</q> : <span className="text-muted">None</span>}
+                            {f.sourceText ? <q className="text-ink-2 [quotes:'“'_'”']">{f.sourceText}</q> : <span className="text-muted-foreground">None</span>}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <p className="px-4 py-4 text-[13px] text-muted">No fields could be read from this document.</p>
+                  <p className="px-4 py-4 text-[13px] text-muted-foreground">No fields could be read from this document.</p>
                 )}
               </Panel>
             );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Tooltip } from "@/components/ui/primitives";
+import { Tooltip } from "@/components/app/primitives";
 
 type Project = { code: string; name: string; exposed: string; exposedCents: number; hold: number };
 
@@ -8,7 +8,7 @@ type Project = { code: string; name: string; exposed: string; exposedCents: numb
 export function ExposureBars({ projects, totalCents }: { projects: Project[]; totalCents: number }) {
   const max = Math.max(1, ...projects.map((p) => p.exposedCents));
   return (
-    <ul className="grid grid-cols-3 gap-x-8 gap-y-4">
+    <ul className="space-y-4">
       {projects.map((p) => {
         const share = totalCents ? Math.round((p.exposedCents / totalCents) * 100) : 0;
         return (
@@ -22,7 +22,7 @@ export function ExposureBars({ projects, totalCents }: { projects: Project[]; to
                 {p.exposedCents ? <div className="h-2 rounded-full bg-hold" style={{ width: `${Math.max(2, (p.exposedCents / max) * 100)}%` }} /> : null}
               </div>
             </Tooltip>
-            <p className="num mt-1 text-xs text-muted">
+            <p className="num mt-1 text-xs text-muted-foreground">
               {share}% of exposure, {p.hold} on hold
             </p>
           </li>

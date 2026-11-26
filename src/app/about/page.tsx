@@ -1,5 +1,5 @@
 import { HowItWorks } from "@/components/app/how-it-works";
-import { PageHeader, Panel, PanelHeader } from "@/components/ui/layout";
+import { PageHeader, Panel, PanelHeader } from "@/components/app/layout";
 import { RULE_NAMES } from "@/domain/rules";
 import { ruleShort } from "@/view/rule-labels";
 
@@ -41,7 +41,7 @@ export default function AboutPage() {
                 <tr key={step} className="border-b border-line align-top last:border-0">
                   <td className="w-44 px-4 py-2.5 font-medium text-ink">{step}</td>
                   <td className="w-20 px-2 py-2.5 text-ink-2">{who}</td>
-                  <td className="px-4 py-2.5 text-muted">{why}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground">{why}</td>
                 </tr>
               ))}
             </tbody>
@@ -52,9 +52,9 @@ export default function AboutPage() {
           <table className="w-full text-[13px]">
             <thead className="border-b border-line bg-subtle">
               <tr>
-                <th className="h-8 px-4 text-left text-xs font-medium text-muted">Rule</th>
-                <th className="h-8 px-2 text-left text-xs font-medium text-muted">Checks</th>
-                <th className="h-8 px-4 text-left text-xs font-medium text-muted">Exposure when it fails</th>
+                <th className="h-8 px-4 text-left text-xs font-medium text-muted-foreground">Rule</th>
+                <th className="h-8 px-2 text-left text-xs font-medium text-muted-foreground">Checks</th>
+                <th className="h-8 px-4 text-left text-xs font-medium text-muted-foreground">Exposure when it fails</th>
               </tr>
             </thead>
             <tbody>
@@ -62,16 +62,16 @@ export default function AboutPage() {
                 <tr key={id} className="border-b border-line last:border-0">
                   <td className="num px-4 py-2 font-semibold text-ink">{id}</td>
                   <td className="px-2 py-2 text-ink-2">
-                    {name} <span className="text-muted">({ruleShort(id).toLowerCase()} if not)</span>
+                    {name} <span className="text-muted-foreground">({ruleShort(id).toLowerCase()} if not)</span>
                   </td>
-                  <td className="px-4 py-2 text-muted">{exposure[id]}</td>
+                  <td className="px-4 py-2 text-muted-foreground">{exposure[id]}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Panel>
       </div>
-      <p className="text-xs text-muted">Fictional data. LienGuard flags issues for a person to review and is not legal advice; lien rules differ by state.</p>
+      <p className="text-xs text-muted-foreground">Fictional data. LienGuard flags issues for a person to review and is not legal advice; lien rules differ by state.</p>
     </div>
   );
 }

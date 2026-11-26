@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { post } from "./client-api";
 import { runQueue, type QueueStatus } from "@/lib/queue";
-import { Panel, PanelHeader } from "@/components/ui/layout";
+import { Panel, PanelHeader } from "@/components/app/layout";
 import { PasscodeNote } from "@/components/app/demo-access";
-import { cn } from "@/components/ui/cn";
+import { cn } from "@/components/app/cn";
 
 type Doc = { id: string; fileName: string; status: string };
 
 const view: Record<QueueStatus, { label: string; icon: React.ReactNode; cls: string }> = {
-  queued: { label: "Waiting", icon: <CircleDashed aria-hidden />, cls: "text-muted" },
+  queued: { label: "Waiting", icon: <CircleDashed aria-hidden />, cls: "text-muted-foreground" },
   reading: { label: "Reading", icon: <Loader2 aria-hidden className="animate-spin" />, cls: "text-ink-2" },
   done: { label: "Read", icon: <CheckCircle2 aria-hidden />, cls: "text-safe" },
   "needs review": { label: "Needs review", icon: <CircleHelp aria-hidden />, cls: "text-review" },
@@ -91,7 +91,7 @@ export function Processing({ batchId, documents }: { batchId: string; documents:
           return (
             <li key={d.id} className={cn("flex h-10 items-center justify-between gap-3 border-b border-line px-4 text-[13px]", i % 2 === 0 && "border-r")}>
               <span className="flex min-w-0 items-center gap-2 text-ink">
-                <FileText aria-hidden className="size-4 shrink-0 text-muted" />
+                <FileText aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                 <span className="truncate">{d.fileName}</span>
               </span>
               <span className={cn("flex shrink-0 items-center gap-1 text-xs font-medium [&_svg]:size-3.5", s.cls)}>
