@@ -4,7 +4,9 @@ Before a general contractor pays a subcontractor, someone has to check that the 
 
 LienGuard takes the payments spreadsheet and the PDFs that arrived. For every payment it says **SAFE** or **HOLD**, explains why with rule ids, and shows the dollars at risk. It then drafts one follow-up email per subcontractor, and **a person approves each email before it is sent**.
 
-> **Live demo: https://lienguard-one.vercel.app** · Click **Use sample data**. Write actions need the demo passcode, which is shared privately (enter it top right). Emails in the demo are redirected to one inbox.
+> **Live demo: https://lienguard-one.vercel.app**. Click **Use sample data**; no passcode is needed. The sample batch uses recorded AI readings, so it gives the same result every time and costs nothing. Uploading your own files, editing drafts and sending emails need the demo passcode, which is shared privately (Demo access, top right). Demo emails are redirected to one inbox.
+>
+> Screenshots of every screen are in [`docs/screenshots/`](docs/screenshots/).
 
 ## What it does
 
