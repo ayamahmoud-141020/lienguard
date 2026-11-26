@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, CircleDashed, CircleHelp, FileText, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDashed, CircleHelp, FileText, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { post } from "./client-api";
@@ -25,6 +25,7 @@ export function Processing({ batchId, documents }: { batchId: string; documents:
     Object.fromEntries(documents.map((d) => [d.id, d.status === "done" ? "done" : d.status === "needs_review" ? "needs review" : "queued"])),
   );
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
   const [phase, setPhase] = useState<"reading" | "deciding" | "failed">("reading");
   const started = useRef(false);
 
@@ -37,7 +38,11 @@ export function Processing({ batchId, documents }: { batchId: string; documents:
         await runQueue(
           todo,
           4,
-          async (id) => (await post<{ status: "done" | "needs review" }>(`/api/batches/${batchId}/documents/${id}/extract`)).status,
+          async (id) => {
+            const r = await post<{ status: "done" | "needs review"; notice: string | null }>(`/api/batches/${batchId}/documents/${id}/extract`);
+            if (r.notice) setNotice(r.notice);
+            return r.status;
+          },
           (id, s) => setStatus((prev) => ({ ...prev, [id]: s })),
         );
         setPhase("deciding");
@@ -67,6 +72,12 @@ export function Processing({ batchId, documents }: { batchId: string; documents:
         <div className="h-1.5 overflow-hidden rounded-full bg-[#eef1f4]" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full rounded-full bg-brand transition-[width] duration-300" style={{ width: `${pct}%` }} />
         </div>
+        {notice ? (
+          <p role="status" className="mt-3 flex gap-2 rounded-[6px] border border-warn-line bg-warn-bg px-3 py-2 text-[13px] font-medium text-warn">
+            <AlertTriangle aria-hidden className="mt-0.5 size-4 shrink-0" />
+            {notice}
+          </p>
+        ) : null}
         {error ? (
           <div className="mt-3 rounded-[6px] border border-hold-line bg-hold-bg px-3 py-2 text-[13px] text-hold">
             {error}

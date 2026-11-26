@@ -12,6 +12,7 @@ import { evaluateBatch, type BatchInput, type BatchResult, type ExtractedDocumen
 import { loadFixtureExtractor, readBatchSpreadsheets } from "@/pipeline/samples";
 import { dedupeDocuments } from "@/pipeline/documents";
 import { finishBatch, nextBatchAction, readDocument, samplesToDelete } from "@/pipeline/lifecycle";
+import { quotaNotice } from "@/view/copy";
 import type { RowError } from "@/ingest/spreadsheets";
 
 const SAMPLES_DIR = join(process.cwd(), "samples");
@@ -124,24 +125,24 @@ export async function addDocument(batchId: string, fileName: string, bytes: Uint
 }
 
 /** Extracts one document (one request per PDF). Cached by file hash, so re-runs cost nothing. Never throws past here (AC-13.2). */
-export async function extractDocument(batchId: string, documentId: string): Promise<"done" | "needs review"> {
+export async function extractDocument(batchId: string, documentId: string): Promise<{ status: "done" | "needs review"; notice: string | null }> {
   const doc = await prisma.document.findFirst({ where: { id: documentId, batchId } });
   if (!doc) throw new Error("document not found");
   const read = await readDocument(() => cachedExtract(getExtractor(), dbCache, { bytes: new Uint8Array(doc.bytes), fileName: doc.fileName }), { documentId: doc.id, fileName: doc.fileName });
   await prisma.document.update({ where: { id: doc.id }, data: { extractionJson: json(read.outcome), status: read.status } });
   await prisma.batch.update({ where: { id: batchId }, data: { updatedAt: new Date() } });
-  return read.status === "done" ? "done" : "needs review";
+  return { status: read.status === "done" ? "done" : "needs review", notice: quotaNotice([read.outcome]) };
 }
 
 /** A stored reading as an ExtractOutcome; missing or invalid means not read → needs review. */
 export function storedOutcome(json: Prisma.JsonValue | null): ExtractOutcome {
   if (!json || typeof json !== "object" || Array.isArray(json)) return { ok: false, reason: "not read yet" };
-  const o = json as { ok?: unknown; extraction?: unknown; reason?: unknown };
+  const o = json as { ok?: unknown; extraction?: unknown; reason?: unknown; code?: unknown };
   if (o.ok === true) {
     const parsed = Extraction.safeParse(o.extraction);
     return parsed.success ? { ok: true, extraction: parsed.data } : { ok: false, reason: "stored extraction is invalid" };
   }
-  return { ok: false, reason: typeof o.reason === "string" ? o.reason : "could not be read" };
+  return { ok: false, reason: typeof o.reason === "string" ? o.reason : "could not be read", ...(o.code === "quota" ? { code: "quota" as const } : {}) };
 }
 
 /** Re-runs matching + rules from stored extractions (no LLM call). */
@@ -172,8 +173,10 @@ export async function getBatchView(batchId: string) {
       select: { id: true, name: true, createdAt: true, updatedAt: true, status: true, kind: true, error: true, today: true, resultJson: true },
     });
     if (!batch) return null;
-    const documents = await prisma.document.findMany({ where: { batchId }, orderBy: { fileName: "asc" }, select: { id: true, fileName: true, status: true } });
-    return { ...batch, result: (batch.resultJson as unknown as BatchResult | null) ?? null, documents };
+    const rows = await prisma.document.findMany({ where: { batchId }, orderBy: { fileName: "asc" }, select: { id: true, fileName: true, status: true, extractionJson: true } });
+    const documents = rows.map(({ id, fileName, status }) => ({ id, fileName, status }));
+    const notice = quotaNotice(rows.filter((r) => r.extractionJson !== null).map((r) => storedOutcome(r.extractionJson)));
+    return { ...batch, result: (batch.resultJson as unknown as BatchResult | null) ?? null, documents, notice };
   };
   const view = await load();
   if (!view) return null;

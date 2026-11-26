@@ -78,7 +78,7 @@ describe("S-12 Gemini provider", () => {
 
     const quota = scripted([httpError(429), httpError(429)]);
     const q = await new GeminiExtractor(quota.fn, "m").extract({ bytes: pdf, fileName: "a.pdf" });
-    expect(q).toEqual({ ok: false, reason: "could not read the document reliably (the AI provider's rate limit or daily quota was reached; try again later)" });
+    expect(q).toEqual({ ok: false, code: "quota", reason: "could not read the document reliably (the AI provider's rate limit or daily quota was reached; try again later)" });
 
     const blocked = scripted([undefined, undefined]);
     expect((await new GeminiExtractor(blocked.fn, "m").extract({ bytes: pdf, fileName: "a.pdf" })).ok).toBe(false);

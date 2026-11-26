@@ -8,6 +8,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const denied = guard(req, "document.extract");
   if (denied) return denied;
   const { id, docId } = await params;
-  const status = await extractDocument(id, docId);
-  return Response.json({ status });
+  const { status, notice } = await extractDocument(id, docId);
+  return Response.json({ status, notice });
 }

@@ -2,7 +2,7 @@ import { requirePasscode } from "./guard";
 
 /**
  * Who may do what on the public demo (R-17, AC-14.1).
- * Open: trying the fixed, fictional sample data (recorded readings, no AI cost for reading).
+ * Open: trying the fixed, fictional sample data (hand-checked readings, no AI cost for reading).
  * Passcode: anything that reads your own files with live AI, changes email text, or sends email.
  */
 export const PUBLIC_ACTIONS = ["batch.sample", "drafts.generate", "draft.approve", "draft.skip"] as const;

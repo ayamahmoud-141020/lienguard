@@ -37,8 +37,7 @@ export class GeminiExtractor implements Extractor {
       } catch (e) {
         if (statusOf(e) === 429) {
           // Backoff already waited; a quota error now is not worth a second full attempt.
-          lastError = "the AI provider's rate limit or daily quota was reached; try again later";
-          break;
+          return { ok: false, code: "quota", reason: "could not read the document reliably (the AI provider's rate limit or daily quota was reached; try again later)" };
         }
         lastError = e instanceof Error ? e.message.slice(0, 300) : "request failed";
         continue;

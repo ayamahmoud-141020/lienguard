@@ -1,4 +1,4 @@
-import { AlertOctagon, ChevronLeft, FileClock, FileQuestion } from "lucide-react";
+import { AlertOctagon, AlertTriangle, ChevronLeft, FileClock, FileQuestion, Info } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBatchView } from "@/server/batches";
@@ -6,6 +6,7 @@ import { listDrafts } from "@/server/drafts";
 import { buildDashboard } from "@/view/models";
 import { formatMoney } from "@/domain/money";
 import { formatDate } from "@/domain/dates";
+import { SAMPLE_NOTE } from "@/view/copy";
 import { Processing } from "@/app/_components/processing";
 import { PaymentsTable } from "@/app/_components/payments-table";
 import { DraftEmailsButton } from "@/app/_components/drafts";
@@ -30,7 +31,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const batch = await getBatchView(id);
   if (!batch) notFound();
-  const subtitle = `Rules applied as of ${formatDate(batch.today)} (demo date). ${batch.kind === "sample" ? "Sample data with recorded AI readings." : "Uploaded batch."}`;
+  const subtitle = `Rules applied as of ${formatDate(batch.today)} (demo date). ${batch.kind === "sample" ? "Sample data." : "Uploaded batch."}`;
 
   if (batch.status === "failed") {
     return (
@@ -78,6 +79,19 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
           </>
         }
       />
+
+      {batch.kind === "sample" ? (
+        <p className="flex gap-2 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-2.5 text-[13px] text-ink-2">
+          <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
+          {SAMPLE_NOTE}
+        </p>
+      ) : null}
+      {batch.notice ? (
+        <p role="status" className="flex gap-2 rounded-[var(--radius-card)] border border-warn-line bg-warn-bg px-4 py-2.5 text-[13px] font-medium text-warn">
+          <AlertTriangle aria-hidden className="mt-0.5 size-4 shrink-0" />
+          {batch.notice}
+        </p>
+      ) : null}
 
       <KpiStrip
         exposed={d.exposed}
