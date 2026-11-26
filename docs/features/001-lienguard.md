@@ -279,9 +279,9 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-15 | Frontend redesign | S-13, S-14 | merged |
 | S-16 | Honest sample note; AI-quota message | S-12, S-15 | merged |
 | S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | checking |
-| S-18 | Inbound documents | S-13, S-17 | coding |
-| S-19 | Daily automation | S-18 | coding |
-| S-20 | Activity timeline; loop in docs | S-18, S-19 | coding |
+| S-18 | Inbound documents | S-13, S-17 | checking |
+| S-19 | Daily automation | S-18 | checking |
+| S-20 | Activity timeline; loop in docs | S-18, S-19 | checking |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

@@ -78,7 +78,7 @@ export const prismaDraftStore: DraftStore = {
 };
 
 export async function listDrafts(batchId: string): Promise<EmailDraftRecord[]> {
-  const rows = await prisma.emailDraft.findMany({ where: { batchId }, orderBy: { subCode: "asc" } });
+  const rows = await prisma.emailDraft.findMany({ where: { batchId }, orderBy: [{ subCode: "asc" }, { kind: "asc" }] });
   return rows.map(toRecord);
 }
 
