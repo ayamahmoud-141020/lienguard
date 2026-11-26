@@ -14,6 +14,9 @@ import { dedupeDocuments } from "@/pipeline/documents";
 import { finishBatch, nextBatchAction, readDocument, samplesToDelete } from "@/pipeline/lifecycle";
 import { quotaNotice } from "@/view/copy";
 import type { RowError } from "@/ingest/spreadsheets";
+import { RecordedEmailWriter } from "@/email/recorded-writer";
+import { generateDrafts, type DraftStore } from "@/email/workflow";
+import { prismaDraftStore } from "@/server/drafts";
 
 export const SAMPLES_DIR = join(process.cwd(), "samples");
 
@@ -48,6 +51,8 @@ export interface BatchStore {
   finishReady(batchId: string, result: BatchResult): Promise<void>;
   listBatches(): Promise<{ id: string; kind: string; createdAt: Date }[]>;
   deleteBatches(ids: string[]): Promise<void>;
+  /** Where follow-up drafts are stored (sample batches get theirs at creation, S-21). */
+  drafts: DraftStore;
 }
 
 const json = (v: unknown) => v as Prisma.InputJsonValue;
@@ -81,6 +86,7 @@ export const prismaBatchStore: BatchStore = {
   async deleteBatches(ids) {
     if (ids.length) await prisma.batch.deleteMany({ where: { id: { in: ids } } });
   },
+  drafts: prismaDraftStore,
 };
 
 const MAX_SAMPLE_BATCHES = 20;
@@ -106,7 +112,11 @@ export async function createSampleBatch(store: BatchStore = prismaBatchStore, sa
     const id = await store.addDocument({ batchId, fileName: d.fileName, sha256: d.sha256, bytes: d.bytes, outcome: read.outcome, status: read.status });
     extracted.push({ id, fileName: d.fileName, outcome: read.outcome });
   }
-  await store.finishReady(batchId, evaluateBatch(input, extracted, today));
+  const result = evaluateBatch(input, extracted, today);
+  await store.finishReady(batchId, result);
+  // Emails are ready at once: wording recorded from a live Gemini run, replayed with no AI calls,
+  // then filled and post-checked like any live draft (S-21). Uploaded batches still draft live.
+  await generateDrafts(batchId, result, RecordedEmailWriter.fromDir(join(samplesDir, "drafts")), store.drafts);
   await store.deleteBatches(samplesToDelete(await store.listBatches(), MAX_SAMPLE_BATCHES));
   return batchId;
 }

@@ -15,6 +15,8 @@ describe("S-16 honest sample note, clear AI-quota message", () => {
   it("AC-16.1 the sample batch page and the README show the same honest note", () => {
     expect(SAMPLE_NOTE).toMatch(/hand-checked readings/);
     expect(SAMPLE_NOTE).toMatch(/105 of 106 fields/);
+    // Names the model behind the number (smoke run 2026-11-26: claude-opus-5-5 and Gemini each 105/106).
+    expect(SAMPLE_NOTE).toMatch(/Claude \(claude-opus-5-5\) and Gemini/);
     expect(SAMPLE_NOTE).toMatch(/Upload your own PDFs to see live extraction/);
     expect(SAMPLE_NOTE).not.toMatch(/recorded from a live Gemini run/);
     expect(readFileSync("README.md", "utf8")).toContain(SAMPLE_NOTE);

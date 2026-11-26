@@ -1,0 +1,20 @@
+{
+  "recordedFrom": "claude-opus-5-5",
+  "recordedOn": "2026-11-26",
+  "forModel": {
+    "contactName": "Dana Reyes",
+    "subcontractor": "Summit Air Mechanical",
+    "issues": [
+      {
+        "n": 1,
+        "ruleId": "R03",
+        "project": "Parkway Retail Center",
+        "invoice": "SAM-1130",
+        "problem": "The {{AMOUNT_1}} payment was made on {{DATE_1}}, but we only have a conditional waiver.",
+        "needed": "an unconditional progress lien waiver for {{AMOUNT_1}} through {{DATE_2}}"
+      }
+    ]
+  },
+  "subject": "Unconditional lien waiver needed: Parkway Retail Center, Invoice SAM-1130",
+  "bodyTemplate": "Hi Dana,\n\nWe're reviewing our records for Summit Air Mechanical and need one document to keep your payment file up to date.\n\n1. Parkway Retail Center, Invoice SAM-1130: The {{AMOUNT_1}} payment was made on {{DATE_1}}, but we only have a conditional waiver on file. Please send an unconditional progress lien waiver for {{AMOUNT_1}} through {{DATE_2}}.\n\nPlease reply to this email with the document attached. Thank you for your help.\n\nBest regards,\nAccounts Payable"
+}
