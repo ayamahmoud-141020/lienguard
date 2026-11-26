@@ -246,13 +246,19 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-10 | Email drafts and send | S-7, S-9 | awaiting-merge |
 | S-11 | Security, health, deploy, README | S-9, S-10 | awaiting-merge |
 | S-12 | Gemini provider | S-5, S-10 | awaiting-merge |
-| S-13 | Deterministic sample, no stuck batches | S-9, S-12 | checking |
-| S-14 | Open sample data | S-11, S-13 | checking |
-| S-15 | Frontend redesign | S-13, S-14 | checking |
-| S-16 | Honest sample note; AI-quota message | S-12, S-15 | checking |
+| S-13 | Deterministic sample, no stuck batches | S-9, S-12 | awaiting-merge |
+| S-14 | Open sample data | S-11, S-13 | awaiting-merge |
+| S-15 | Frontend redesign | S-13, S-14 | awaiting-merge |
+| S-16 | Honest sample note; AI-quota message | S-12, S-15 | awaiting-merge |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
 - **AC-1.1**: verified by CI on the PR (lint, typecheck, unit, E2E and `pnpm build` all pass on 98f91d4). The auditor is not allowed to run `pnpm build`.
 - **AC-11.4**: manual. The README sections were inspected by the auditor.
 - **AC-12.7**: manual. The live run scored 105/106 fields, 17/17 needsReview and 12/12 payments against `expected.json` (see README "Live results").
+
+### Sign-off for S-13 to S-16 (2026-11-26, Aya, in chat)
+After check round `docs/checks/2026-11-26-check-5.md` (all automated checks pass), Aya accepted:
+- **AC-14.3**: manual. While locked, protected actions show "Demo passcode required — ask Aya" (screenshots 08, 09).
+- **AC-15.1**: manual. The redesign follows the 2026-11-26 brief (`docs/screenshots/01–17`).
+- **AC-15.2**: tests, lint and typecheck verified by the auditor; build verified by CI on b2aa658; tabular numbers checked by hand.
