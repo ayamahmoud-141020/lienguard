@@ -207,15 +207,21 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
 |---|---|---|---|
-| S-1 | Skeleton | — | checking |
-| S-2 | Domain basics | S-1 | checking |
-| S-3 | Spreadsheet ingest | S-2 | checking |
-| S-4 | Sample data | S-2 | checking |
-| S-5 | Extraction | S-2 | checking |
-| S-6 | Matching | S-2, S-5 | checking |
-| S-7 | Rules, exposure, decision | S-6 | checking |
-| S-8 | Pipeline + E2E | S-3, S-4, S-7 | checking |
-| S-9 | DB, API, screens | S-8 | checking |
-| S-10 | Email drafts and send | S-7, S-9 | checking |
-| S-11 | Security, health, deploy, README | S-9, S-10 | checking |
-| S-12 | Gemini provider | S-5, S-10 | checking |
+| S-1 | Skeleton | — | awaiting-merge |
+| S-2 | Domain basics | S-1 | awaiting-merge |
+| S-3 | Spreadsheet ingest | S-2 | awaiting-merge |
+| S-4 | Sample data | S-2 | awaiting-merge |
+| S-5 | Extraction | S-2 | awaiting-merge |
+| S-6 | Matching | S-2, S-5 | awaiting-merge |
+| S-7 | Rules, exposure, decision | S-6 | awaiting-merge |
+| S-8 | Pipeline + E2E | S-3, S-4, S-7 | awaiting-merge |
+| S-9 | DB, API, screens | S-8 | awaiting-merge |
+| S-10 | Email drafts and send | S-7, S-9 | awaiting-merge |
+| S-11 | Security, health, deploy, README | S-9, S-10 | awaiting-merge |
+| S-12 | Gemini provider | S-5, S-10 | awaiting-merge |
+
+## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
+After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
+- **AC-1.1**: verified by CI on the PR (lint, typecheck, unit, E2E and `pnpm build` all pass on 98f91d4). The auditor is not allowed to run `pnpm build`.
+- **AC-11.4**: manual. The README sections were inspected by the auditor.
+- **AC-12.7**: manual. The live run scored 105/106 fields, 17/17 needsReview and 12/12 payments against `expected.json` (see README "Live results").
