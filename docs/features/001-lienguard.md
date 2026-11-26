@@ -258,7 +258,7 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-14 | Open sample data | S-11, S-13 | merged |
 | S-15 | Frontend redesign | S-13, S-14 | merged |
 | S-16 | Honest sample note; AI-quota message | S-12, S-15 | merged |
-| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | checking |
+| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | awaiting-merge |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
@@ -271,3 +271,9 @@ After check round `docs/checks/2026-11-26-check-5.md` (all automated checks pass
 - **AC-14.3**: manual. While locked, protected actions show "Demo passcode required — ask Aya" (screenshots 08, 09).
 - **AC-15.1**: manual. The redesign follows the 2026-11-26 brief (`docs/screenshots/01–17`).
 - **AC-15.2**: tests, lint and typecheck verified by the auditor; build verified by CI on b2aa658; tabular numbers checked by hand.
+
+### Sign-off for S-17 (2026-11-26, Aya, in chat)
+After check round `docs/checks/2026-11-26-check-6.md` (all automated checks pass; the date-highlight test was then added), Aya accepted:
+- **AC-17.1**: manual. Dashboard and app shell at 1440px and 1280px (screenshots 02, 15).
+- **AC-17.2**: manual. Email master–detail with highlighted code-filled amounts and dates, and the Edit toggle (screenshots 10b, 10c, 10d).
+- **AC-17.4**: tests, lint and typecheck verified by the auditor; build verified by CI on 65d8e92; licence recorded in ADR-0008.
