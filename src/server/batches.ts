@@ -114,7 +114,7 @@ export async function createSampleBatch(store: BatchStore = prismaBatchStore, sa
   }
   const result = evaluateBatch(input, extracted, today);
   await store.finishReady(batchId, result);
-  // Emails are ready at once: wording recorded from a live Gemini run, replayed with no AI calls,
+  // Emails are ready at once: wording recorded from live AI runs (Gemini and Claude), replayed with no AI calls,
   // then filled and post-checked like any live draft (S-21). Uploaded batches still draft live.
   await generateDrafts(batchId, result, RecordedEmailWriter.fromDir(join(samplesDir, "drafts")), store.drafts);
   await store.deleteBatches(samplesToDelete(await store.listBatches(), MAX_SAMPLE_BATCHES));

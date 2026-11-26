@@ -290,7 +290,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-18 | Inbound documents | S-13, S-17 | merged |
 | S-19 | Daily automation | S-18 | merged |
 | S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
-| S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | checking |
+| S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | awaiting-merge |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

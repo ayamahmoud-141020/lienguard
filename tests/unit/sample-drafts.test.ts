@@ -57,6 +57,14 @@ describe("S-21 sample batches come with their emails ready", () => {
     // No recording for this input: the writer refuses and the code template is used.
     const empty = await draftEmail(new RecordedEmailWriter([]), sub);
     expect(empty.source).toBe("template");
+    // A recording made for a different input to the same subcontractor (e.g. older issues) is not used.
+    const rec = JSON.parse(readFileSync(join(recordingsDir, `${sub.subCode}.json`), "utf8")) as { forModel: Record<string, unknown>; subject: string; bodyTemplate: string };
+    const stale = { recordedFrom: "gemini-x", recordedOn: "2026-11-01", subject: rec.subject, bodyTemplate: rec.bodyTemplate, forModel: { ...rec.forModel, contactName: "Someone Else" } };
+    const other = await draftEmail(new RecordedEmailWriter([stale]), sub);
+    expect(other.source).toBe("template");
+    // The exact recording for this input is used.
+    const exact = await draftEmail(new RecordedEmailWriter([{ ...stale, forModel: rec.forModel }]), sub);
+    expect(exact.source).toBe("ai");
     // A tampered recording with an invented amount is caught by the post-check.
     const dir = mkdtempSync(join(tmpdir(), "lg-drafts-"));
     cpSync("samples", dir, { recursive: true });
@@ -80,7 +88,7 @@ describe("S-21 sample batches come with their emails ready", () => {
     expect(route).toMatch(/generateDrafts\(id, batch\.result, getWriter\(\)/);
   });
 
-  it("AC-21.3 the 'recorded from Gemini' note shows only on sample batches whose follow-ups all came from the recording", () => {
+  it("AC-21.3 the 'recorded from live AI runs' note shows only on sample batches whose follow-ups all came from the recording", () => {
     expect(SAMPLE_DRAFTS_NOTE).toBe("Sample emails were recorded from live AI runs (Gemini and Claude).");
     // The note names exactly the providers that wrote the recordings, no more and no less.
     const providers = new Set(

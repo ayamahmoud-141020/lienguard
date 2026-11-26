@@ -13,7 +13,7 @@ const Recording = z.object({
 });
 
 /**
- * Replays email wording recorded from a live Gemini run (samples/drafts, S-21). No AI calls.
+ * Replays email wording recorded from live AI runs, Gemini or Claude (samples/drafts, S-21). No AI calls.
  * A recording is used only when the writer input is exactly the one it was recorded for;
  * anything else throws, so draftEmail falls back to the code template. The result still
  * goes through placeholder filling and the post-check like any live draft.
