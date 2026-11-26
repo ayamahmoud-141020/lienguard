@@ -35,6 +35,10 @@ describe("S-18/S-19 automation endpoints", () => {
     expect(calls).toHaveLength(0);
     expect((await POST(inbound({ "x-inbound-secret": "in-secret" }, new Blob(["not a pdf"])))).status).toBe(400);
     expect(calls).toHaveLength(0);
+    const big = new Uint8Array(4 * 1024 * 1024 + 1);
+    big.set(new TextEncoder().encode("%PDF-1.4"));
+    expect((await POST(inbound({ "x-inbound-secret": "in-secret" }, new Blob([big], { type: "application/pdf" })))).status).toBe(400);
+    expect(calls).toHaveLength(0);
     const ok = await POST(inbound({ "x-inbound-secret": "in-secret" }));
     expect(ok.status).toBe(200);
     expect(calls).toEqual([{ fn: "receive", args: expect.objectContaining({ batchId: "b1", fileName: "reply.pdf", actor: "automation", notify: true }) }]);

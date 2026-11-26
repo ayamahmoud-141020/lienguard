@@ -55,6 +55,7 @@ describe("S-18 inbound documents", () => {
     expect(store.batches.get(id)!.result!.exposedCents).toBe(16_050_000);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe("ap@example.test");
+    expect(sent[0]!.idempotencyKey).toBe(`lienguard-notify/${id}/PAY-02/HOLD-SAFE`);
     expect(sent[0]!.text).toContain(safeToPayText(r.changes[0]!));
     expect(safeToPayText(r.changes[0]!)).toBe("BlueLine Plumbing is now safe to pay: BLP-2201, $20,000.00");
     expect(store.events.map((e) => e.action)).toEqual(["document.received", "rules.rerun", "payment.status_changed", "notification.sent"]);
