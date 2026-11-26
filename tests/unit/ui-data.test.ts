@@ -36,4 +36,13 @@ describe("S-17 data behind the template's charts and email preview", () => {
     expect(filled).not.toContain("December 1, 2026");
     expect(filled.every((t) => /^\$[\d,]+\.\d{2}$|^[A-Z][a-z]+ \d{1,2}, \d{4}$/.test(t))).toBe(true);
   });
+
+  it("AC-17.3 code-filled dates are highlighted too", async () => {
+    const sub = buildSubIssues(await sample()).find((s) => s.subCode === "BRW") as SubIssues;
+    const body = codeTemplate(sub).body;
+    const filled = highlightFilled(body, sub).filter((p) => p.filled).map((p) => p.text);
+    const datesInBody = body.match(/[A-Z][a-z]+ \d{1,2}, \d{4}/g) ?? [];
+    expect(datesInBody.length).toBeGreaterThan(0);
+    expect(filled).toEqual(expect.arrayContaining(datesInBody));
+  });
 });
