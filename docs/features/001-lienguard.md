@@ -278,10 +278,10 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-14 | Open sample data | S-11, S-13 | merged |
 | S-15 | Frontend redesign | S-13, S-14 | merged |
 | S-16 | Honest sample note; AI-quota message | S-12, S-15 | merged |
-| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | awaiting-merge |
-| S-18 | Inbound documents | S-13, S-17 | awaiting-merge |
-| S-19 | Daily automation | S-18 | awaiting-merge |
-| S-20 | Activity timeline; loop in docs | S-18, S-19 | awaiting-merge |
+| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | merged |
+| S-18 | Inbound documents | S-13, S-17 | merged |
+| S-19 | Daily automation | S-18 | merged |
+| S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
