@@ -7,7 +7,7 @@ export type Sleep = (ms: number) => Promise<void>;
 
 const realSleep: Sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function statusOf(e: unknown): number | undefined {
+export function statusOf(e: unknown): number | undefined {
   const s = (e as { status?: unknown } | null)?.status;
   return typeof s === "number" ? s : undefined;
 }

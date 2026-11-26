@@ -3,11 +3,14 @@
  * with the recorded fixture. Needs GEMINI_API_KEY in .env.local. Never runs in CI.
  *   pnpm smoke:gemini            # all sample PDFs
  *   pnpm smoke:gemini --models   # list the models this key can use
+ *   pnpm smoke:gemini --batch <id>  # score readings already stored for a batch (no AI calls)
  * Prints field values from the fictional samples only; never prints env values.
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { GoogleGenAI } from "@google/genai";
+import { PrismaClient } from "@prisma/client";
+import type { ExtractOutcome } from "@/ai/extractor";
 import { GeminiExtractor } from "@/ai/gemini-extractor";
 import { toDocument } from "@/ai/to-document";
 import type { ExtractionT } from "@/ai/schemas";
@@ -18,7 +21,9 @@ import { normalizeName } from "@/domain/matching/normalize";
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 const key = process.env.GEMINI_API_KEY;
 const model = process.env.GEMINI_MODEL || "gemini-4-hydrogen";
-if (!key) {
+const batchArg = process.argv.indexOf("--batch");
+const batchId = batchArg > 0 ? process.argv[batchArg + 1] : undefined;
+if (!key && !batchId) {
   console.error("GEMINI_API_KEY is not set (put it in .env.local in the project root).");
   process.exit(1);
 }
@@ -63,9 +68,16 @@ async function main() {
     for await (const m of pager) if (m.supportedActions?.includes("generateContent")) console.log(m.name);
     return;
   }
+  let stored: Map<string, ExtractOutcome> | undefined;
+  if (batchId) {
+    const db = new PrismaClient({ datasources: { db: { url: process.env.DIRECT_URL } } });
+    const docs = await db.document.findMany({ where: { batchId }, select: { fileName: true, extractionJson: true } });
+    await db.$disconnect();
+    stored = new Map(docs.map((d) => [d.fileName, (d.extractionJson ?? { ok: false, reason: "not read yet" }) as unknown as ExtractOutcome]));
+  }
   const extractor = GeminiExtractor.fromApiKey(key ?? "", model, 1);
   const files = readdirSync("samples/pdfs").filter((f) => f.endsWith(".pdf")).sort();
-  console.log(`Model: ${model} · ${files.length} PDFs\n`);
+  console.log(stored ? `Stored readings of batch ${batchId} · ${files.length} PDFs\n` : `Model: ${model} · ${files.length} PDFs\n`);
   let total = 0;
   let agree = 0;
   let decisionsMatch = 0;
@@ -73,7 +85,9 @@ async function main() {
   for (const f of files) {
     const started = Date.now();
     const expected = JSON.parse(readFileSync(join("samples/fixtures", f.replace(/\.pdf$/, ".json")), "utf8")) as ExtractionT;
-    const out = await extractor.extract({ bytes: new Uint8Array(readFileSync(join("samples/pdfs", f))), fileName: f });
+    const out = stored
+      ? (stored.get(f) ?? { ok: false as const, reason: "not in this batch" })
+      : await extractor.extract({ bytes: new Uint8Array(readFileSync(join("samples/pdfs", f))), fileName: f });
     const secs = ((Date.now() - started) / 1000).toFixed(1);
     if (!out.ok) {
       console.log(`✗ ${f} (${secs}s): ${out.reason}`);

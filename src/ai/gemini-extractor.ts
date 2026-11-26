@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { Extraction } from "./schemas";
 import { EXTRACT_SYSTEM_PROMPT, EXTRACT_USER_PROMPT } from "./prompts";
-import { geminiGenerate, toGeminiSchema, type GenerateFn } from "./gemini";
+import { geminiGenerate, statusOf, toGeminiSchema, type GenerateFn } from "./gemini";
 import type { ExtractInput, ExtractOutcome, Extractor } from "./extractor";
 
 const MAX_ATTEMPTS = 2;
@@ -35,6 +35,11 @@ export class GeminiExtractor implements Extractor {
         });
         answer = res.text;
       } catch (e) {
+        if (statusOf(e) === 429) {
+          // Backoff already waited; a quota error now is not worth a second full attempt.
+          lastError = "the AI provider's rate limit or daily quota was reached; try again later";
+          break;
+        }
         lastError = e instanceof Error ? e.message.slice(0, 300) : "request failed";
         continue;
       }
