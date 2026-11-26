@@ -2,7 +2,7 @@ import { AlertOctagon, AlertTriangle, ChevronLeft, FileClock, FileQuestion, Info
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBatchView } from "@/server/batches";
-import { listDrafts } from "@/server/drafts";
+import { listAudit, listDrafts } from "@/server/drafts";
 import { buildDashboard } from "@/view/models";
 import { formatMoney } from "@/domain/money";
 import { formatDate } from "@/domain/dates";
@@ -11,6 +11,8 @@ import { Processing } from "@/app/_components/processing";
 import { PaymentsTable } from "@/app/_components/payments-table";
 import { DraftEmailsButton } from "@/app/_components/drafts";
 import { KpiStrip } from "@/components/app/kpis";
+import { ActivityTimeline } from "@/components/app/activity";
+import { AutomationActions } from "@/app/_components/automation";
 import { ExposureBars } from "@/components/app/exposure-bars";
 import { HoldsByReasonChart, SafeVsHoldChart } from "@/components/app/batch-charts";
 import { decisionSplit, holdsByReason } from "@/view/charts";
@@ -62,6 +64,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
 
   const d = buildDashboard(batch.result);
   const drafts = await listDrafts(id);
+  const activity = await listAudit(id);
   const subsWithHold = new Set(d.rows.filter((r) => r.decision === "HOLD").map((r) => r.subCode)).size;
   const projects = d.byProject.map((p) => ({ ...p, hold: d.rows.filter((r) => r.projectCode === p.code && r.decision === "HOLD").length }));
 
@@ -141,6 +144,25 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
           </ul>
         </Panel>
       ) : null}
+
+      <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-4">
+        <Panel>
+          <PanelHeader title="Automation" description="Documents that arrive later re-check the batch on their own. A daily check re-runs the rules, drafts reminders and sends a digest." />
+          <div className="px-5 py-5">
+            <AutomationActions batchId={id} isSample={batch.kind === "sample"} batchDate={formatDate(batch.today)} />
+            <ol className="mt-5 space-y-1.5 border-t pt-4 text-sm text-muted-foreground">
+              <li>Emails to subcontractors are only drafted. A person approves every one.</li>
+              <li>Notifications and the daily digest go to your own AP inbox.</li>
+            </ol>
+          </div>
+        </Panel>
+        <Panel>
+          <PanelHeader title="Activity" description="Everything that happened to this batch, by automation or by a person. Newest first." />
+          <div className="max-h-[420px] overflow-y-auto">
+            <ActivityTimeline rows={activity} />
+          </div>
+        </Panel>
+      </div>
 
       <Panel>
         <PanelHeader title="Payments" description="Open a payment to see every rule check and the documents behind it." />

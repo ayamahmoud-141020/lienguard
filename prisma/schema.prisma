@@ -32,6 +32,7 @@ model Document {
   bytes          Bytes
   status         String   @default("queued") // queued | done | needs_review
   extractionJson Json?
+  receivedOn     String? // batch day the document arrived (automation, S-18)
   createdAt      DateTime @default(now())
 
   @@unique([batchId, sha256])
@@ -54,6 +55,8 @@ model EmailDraft {
   issuesJson        Json
   status            String    @default("draft") // draft | approved | skipped | sent | failed
   source            String // ai | template
+  kind              String    @default("followup") // followup | reminder (S-19)
+  sentOn            String? // batch day it was sent (for reminders, S-19)
   approvedBy        String?
   approvedAt        DateTime?
   sentAt            DateTime?
@@ -61,7 +64,7 @@ model EmailDraft {
   error             String?
   updatedAt         DateTime  @updatedAt
 
-  @@unique([batchId, subCode])
+  @@unique([batchId, subCode, kind])
 }
 
 model AuditLog {

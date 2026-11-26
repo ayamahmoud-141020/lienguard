@@ -15,7 +15,7 @@ import { finishBatch, nextBatchAction, readDocument, samplesToDelete } from "@/p
 import { quotaNotice } from "@/view/copy";
 import type { RowError } from "@/ingest/spreadsheets";
 
-const SAMPLES_DIR = join(process.cwd(), "samples");
+export const SAMPLES_DIR = join(process.cwd(), "samples");
 
 export function getExtractor(): Extractor {
   const env = loadEnv();
@@ -24,7 +24,7 @@ export function getExtractor(): Extractor {
   return AnthropicExtractor.fromApiKey(env.ANTHROPIC_API_KEY ?? "", env.ANTHROPIC_MODEL);
 }
 
-const dbCache: ExtractionCache = {
+export const dbCache: ExtractionCache = {
   async get(sha) {
     const row = await prisma.extractionCache.findUnique({ where: { sha256: sha } });
     if (!row) return null;

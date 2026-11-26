@@ -31,6 +31,23 @@ LienGuard takes the payments spreadsheet and the PDFs that arrived. For every pa
 5. **Dashboard:** exposed $, SAFE/HOLD counts, exposure by project, and a filterable table. Each payment has a detail page with every rule's PASS/HOLD and the PDF beside it.
 6. **Email drafts:** one per subcontractor with issues → approve / edit / skip → send through Resend. Every action goes into an **audit log**.
 
+## Automation: the loop runs without anyone clicking
+
+```
+document arrives → AI reads it → rules re-check → status changes → notify / draft a reminder → a person approves
+```
+
+- **Inbound documents:** `POST /api/inbound` (header `x-inbound-secret`) takes a PDF and a batch id, as if forwarded from the AP inbox.
+  - The PDF is read, the batch is re-checked and every change is recorded.
+  - When a payment flips from HOLD to SAFE, the AP inbox gets "*BlueLine Plumbing is now safe to pay: BLP-2201, $20,000.00*".
+  - On a sample batch, **Simulate a subcontractor reply** does the same with a corrected waiver, without curl.
+- **Daily check:** Vercel Cron calls `GET /api/cron/daily` (`Authorization: Bearer CRON_SECRET`) every morning. Every open batch is re-checked with the real date, so an expired insurance certificate or a conditional waiver past its grace period turns into a HOLD on its own.
+  - **Reminders:** subcontractors who sent nothing 3 days after our email get a reminder **draft**, which waits for approval.
+  - **Digest:** one email goes to the AP inbox with new holds, cleared holds, exposed $ and drafts waiting. Its numbers are checked against the data before it is sent.
+  - **Run daily check now** (passcode) does the same for one batch and moves its demo date forward a day.
+- **Activity timeline:** the batch page shows every event, marked "Automation" or with the person's name.
+- **Human approval stays:** nothing is ever sent to a subcontractor automatically. Only notifications and the digest go out on their own, and they go to your own inbox.
+
 ## Where AI is used, and where it isn't
 
 | Step | Who does it | Why |

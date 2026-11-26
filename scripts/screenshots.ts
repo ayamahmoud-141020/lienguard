@@ -85,6 +85,22 @@ async function main() {
   await shot(page, "10c-emails-editing", false);
 
   await narrowShot(browser, page.url(), "10d-emails-1280");
+
+  // Automation (S-18..S-20): a subcontractor reply arrives, then three daily checks.
+  await page.goto(batchUrl);
+  await page.getByRole("button", { name: "Simulate a subcontractor reply" }).click();
+  await page.waitForTimeout(1500);
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole("button", { name: "Run daily check now" }).click();
+    await page.waitForTimeout(1500);
+  }
+  await page.getByText("Activity", { exact: true }).scrollIntoViewIfNeeded();
+  await shot(page, "18-automation-activity", false);
+  await shot(page, "18b-dashboard-after-automation");
+  await page.goto(`${batchUrl}/drafts`);
+  await page.getByRole("navigation", { name: "Subcontractors" }).getByRole("button", { name: /Reminder/ }).first().click();
+  await page.waitForTimeout(300);
+  await shot(page, "19-emails-reminder", false);
   await page.goto(`${batchUrl}/audit`);
   await shot(page, "11-audit-log");
   await page.goto(`${BASE}/about`);

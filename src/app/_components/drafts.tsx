@@ -127,7 +127,10 @@ export function DraftDetail({ draft }: { draft: EmailDraftRecord }) {
     <article data-slot="card" className="rounded-xl border bg-card shadow-xs">
       <header className="flex items-start justify-between gap-3 border-b px-5 py-4">
         <div className="min-w-0">
-          <h2 className="font-semibold text-foreground">{draft.issues.subName}</h2>
+          <h2 className="font-semibold text-foreground">
+            {draft.issues.subName}
+            {draft.kind === "reminder" ? <span className="ml-2 text-sm font-normal text-muted-foreground">Reminder, drafted by the daily check</span> : null}
+          </h2>
           <p className="mt-1 truncate text-sm text-muted-foreground">
             To {draft.issues.contactName}, {draft.toAddress}
           </p>
@@ -187,7 +190,11 @@ export function DraftDetail({ draft }: { draft: EmailDraftRecord }) {
         {!check.ok ? <p className="rounded-md border border-warn-line bg-warn-bg px-3 py-2 text-sm text-warn">{check.problems.join("; ")}</p> : null}
         {draft.error ? <p className="rounded-md border border-hold-line bg-hold-bg px-3 py-2 text-sm text-hold">Last send failed: {draft.error}</p> : null}
         <p className="text-xs text-muted-foreground">
-          {draft.source === "ai" ? "Wording by AI. Every amount and date was filled in by code." : "Code template: the AI draft didn't pass the number check."}
+          {draft.kind === "reminder"
+            ? "Reminder written by code from the issues still open. Nothing is sent until a person approves it."
+            : draft.source === "ai"
+              ? "Wording by AI. Every amount and date was filled in by code."
+              : "Code template: the AI draft didn't pass the number check."}
         </p>
       </div>
 
@@ -255,7 +262,10 @@ export function EmailsWorkspace({ drafts }: { drafts: EmailDraftRecord[] }) {
                   className={cn("flex w-full items-start justify-between gap-2 rounded-lg px-3 py-2.5 text-left", active ? "bg-accent" : "hover:bg-muted")}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-foreground">{d.issues.subName}</span>
+                    <span className="block truncate text-sm font-medium text-foreground">
+                      {d.issues.subName}
+                      {d.kind === "reminder" ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">Reminder</span> : null}
+                    </span>
                     <span className="num block text-xs text-muted-foreground">
                       {d.issues.issues.length} issue{d.issues.issues.length === 1 ? "" : "s"}, {d.issues.contactName}
                     </span>

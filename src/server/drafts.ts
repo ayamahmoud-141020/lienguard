@@ -37,12 +37,13 @@ function toRecord(d: EmailDraft): EmailDraftRecord {
     sentAt: d.sentAt?.toISOString() ?? null,
     providerMessageId: d.providerMessageId,
     error: d.error,
+    kind: d.kind === "reminder" ? "reminder" : "followup",
   };
 }
 
 export const prismaDraftStore: DraftStore = {
   async exists(batchId, subCode) {
-    return (await prisma.emailDraft.count({ where: { batchId, subCode } })) > 0;
+    return (await prisma.emailDraft.count({ where: { batchId, subCode, kind: "followup" } })) > 0;
   },
   async create(d: NewDraft) {
     const row = await prisma.emailDraft.create({
@@ -62,6 +63,11 @@ export const prismaDraftStore: DraftStore = {
     if (patch.approvedBy !== undefined) data.approvedBy = patch.approvedBy;
     if (patch.approvedAt !== undefined) data.approvedAt = patch.approvedAt ? new Date(patch.approvedAt) : null;
     if (patch.sentAt !== undefined) data.sentAt = patch.sentAt ? new Date(patch.sentAt) : null;
+    if (patch.status === "sent") {
+      // Remember the batch day it went out, so the daily check can draft a reminder 3 days later (S-19).
+      const row = await prisma.emailDraft.findUnique({ where: { id }, select: { batch: { select: { today: true } } } });
+      if (row) data.sentOn = row.batch.today;
+    }
     if (patch.providerMessageId !== undefined) data.providerMessageId = patch.providerMessageId;
     if (patch.error !== undefined) data.error = patch.error;
     return toRecord(await prisma.emailDraft.update({ where: { id }, data }));
@@ -72,7 +78,7 @@ export const prismaDraftStore: DraftStore = {
 };
 
 export async function listDrafts(batchId: string): Promise<EmailDraftRecord[]> {
-  const rows = await prisma.emailDraft.findMany({ where: { batchId }, orderBy: { subCode: "asc" } });
+  const rows = await prisma.emailDraft.findMany({ where: { batchId }, orderBy: [{ subCode: "asc" }, { kind: "asc" }] });
   return rows.map(toRecord);
 }
 

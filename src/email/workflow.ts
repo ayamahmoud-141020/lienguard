@@ -21,6 +21,8 @@ export type EmailDraftRecord = {
   sentAt: string | null;
   providerMessageId: string | null;
   error: string | null;
+  /** followup (from "Draft follow-up emails") or reminder (drafted by the daily check). Defaults to followup. */
+  kind?: "followup" | "reminder";
 };
 
 export type NewDraft = Pick<EmailDraftRecord, "batchId" | "subCode" | "toAddress" | "subject" | "body" | "issues" | "source">;
