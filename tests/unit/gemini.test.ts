@@ -92,6 +92,9 @@ describe("S-12 Gemini provider", () => {
     await expect(withBackoff(always.fn, { sleep: noSleep })({ model: "m", contents: [], config: {} })).rejects.toThrow("429");
     expect(always.calls).toHaveLength(5);
 
+    const dropped = scripted([new TypeError("fetch failed"), "ok"]);
+    expect((await withBackoff(dropped.fn, { sleep: noSleep })({ model: "m", contents: [], config: {} })).text).toBe("ok");
+
     const auth = scripted([httpError(401), "ok"]);
     await expect(withBackoff(auth.fn, { sleep: noSleep })({ model: "m", contents: [], config: {} })).rejects.toThrow("401");
     expect(auth.calls).toHaveLength(1);

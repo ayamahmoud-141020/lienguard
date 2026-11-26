@@ -21,7 +21,9 @@ export function withBackoff(fn: GenerateFn, opts: { retries?: number; baseMs?: n
         return await fn(req);
       } catch (e) {
         const status = statusOf(e);
-        if (attempt >= retries || (status !== 429 && status !== 503)) throw e;
+        // Network drops (no HTTP status, "fetch failed") are transient too.
+        const transient = status === 429 || status === 503 || (status === undefined && /fetch failed|ECONNRESET|ETIMEDOUT|socket hang up/i.test(String((e as Error)?.message ?? "") + String((e as { cause?: unknown })?.cause ?? "")));
+        if (attempt >= retries || !transient) throw e;
         await sleep(baseMs * 2 ** attempt);
       }
     }
