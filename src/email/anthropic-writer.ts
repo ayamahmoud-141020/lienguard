@@ -10,6 +10,7 @@ export const WRITER_SYSTEM_PROMPT = `You write short, polite, specific emails fr
 Goal: get the documents needed to release their payments or keep them safe.
 
 Rules:
+- Layout: greeting line, blank line, one short intro sentence, blank line, then a numbered list with each item on its own line (blank line between items), blank line, closing, sign-off. Use real line breaks (\n), never one long paragraph.
 - Use a numbered list, one item per issue, in the given order. Mention each item's project and invoice number, and say what is wrong and exactly what to send.
 - For amounts and dates use ONLY the placeholders given (like {{AMOUNT_1}} or {{DATE_2}}), copied exactly. Never write a number, amount or date yourself.
 - Tone: professional and friendly. No threats, no legal claims, no deadlines that aren't in the data.
