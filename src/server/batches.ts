@@ -125,13 +125,13 @@ export async function addDocument(batchId: string, fileName: string, bytes: Uint
 }
 
 /** Extracts one document (one request per PDF). Cached by file hash, so re-runs cost nothing. Never throws past here (AC-13.2). */
-export async function extractDocument(batchId: string, documentId: string): Promise<{ status: "done" | "needs review"; notice: string | null }> {
+export async function extractDocument(batchId: string, documentId: string): Promise<{ status: "done" | "needs review"; outcome: ExtractOutcome }> {
   const doc = await prisma.document.findFirst({ where: { id: documentId, batchId } });
   if (!doc) throw new Error("document not found");
   const read = await readDocument(() => cachedExtract(getExtractor(), dbCache, { bytes: new Uint8Array(doc.bytes), fileName: doc.fileName }), { documentId: doc.id, fileName: doc.fileName });
   await prisma.document.update({ where: { id: doc.id }, data: { extractionJson: json(read.outcome), status: read.status } });
   await prisma.batch.update({ where: { id: batchId }, data: { updatedAt: new Date() } });
-  return { status: read.status === "done" ? "done" : "needs review", notice: quotaNotice([read.outcome]) };
+  return { status: read.status === "done" ? "done" : "needs review", outcome: read.outcome };
 }
 
 /** A stored reading as an ExtractOutcome; missing or invalid means not read → needs review. */
@@ -175,7 +175,7 @@ export async function getBatchView(batchId: string) {
     if (!batch) return null;
     const rows = await prisma.document.findMany({ where: { batchId }, orderBy: { fileName: "asc" }, select: { id: true, fileName: true, status: true, extractionJson: true } });
     const documents = rows.map(({ id, fileName, status }) => ({ id, fileName, status }));
-    const notice = quotaNotice(rows.filter((r) => r.extractionJson !== null).map((r) => storedOutcome(r.extractionJson)));
+    const notice = batchNotice(rows.map((r) => r.extractionJson));
     return { ...batch, result: (batch.resultJson as unknown as BatchResult | null) ?? null, documents, notice };
   };
   const view = await load();
@@ -200,4 +200,9 @@ export async function listBatches() {
 export async function getDocumentReadings(batchId: string, ids: string[]): Promise<Map<string, ExtractOutcome>> {
   const rows = await prisma.document.findMany({ where: { batchId, id: { in: ids } }, select: { id: true, extractionJson: true } });
   return new Map(rows.map((r) => [r.id, storedOutcome(r.extractionJson)]));
+}
+
+/** The dashboard notice for a batch, from its stored readings (AC-16.3). Unread documents (null) are ignored. */
+export function batchNotice(extractionJsons: (Prisma.JsonValue | null)[]): string | null {
+  return quotaNotice(extractionJsons.filter((j) => j !== null).map((j) => storedOutcome(j)));
 }
