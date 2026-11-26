@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Batch {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  status      String       @default("processing") // processing | ready | failed
+  kind        String       @default("upload") // upload | sample
+  error       String? // shown on the batch page when status = failed
+  updatedAt   DateTime     @default(now()) @updatedAt
+  today       String // ISO date the rules ran against
+  inputJson   Json // ingested projects, subs, payments (typed in src/ingest)
+  resultJson  Json? // last pipeline result
+  documents   Document[]
+  emailDrafts EmailDraft[]
+}
+
+model Document {
+  id             String   @id @default(cuid())
+  batchId        String
+  batch          Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  fileName       String
+  sha256         String
+  bytes          Bytes
+  status         String   @default("queued") // queued | done | needs_review
+  extractionJson Json?
+  createdAt      DateTime @default(now())
+
+  @@unique([batchId, sha256])
+}
+
+model ExtractionCache {
+  sha256    String   @id
+  json      Json
+  createdAt DateTime @default(now())
+}
+
+model EmailDraft {
+  id                String    @id @default(cuid())
+  batchId           String
+  batch             Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  subCode           String
+  toAddress         String
+  subject           String
+  body              String
+  issuesJson        Json
+  status            String    @default("draft") // draft | approved | skipped | sent | failed
+  source            String // ai | template
+  approvedBy        String?
+  approvedAt        DateTime?
+  sentAt            DateTime?
+  providerMessageId String?
+  error             String?
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([batchId, subCode])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  at          DateTime @default(now())
+  actor       String
+  action      String
+  entityType  String
+  entityId    String
+  detailsJson Json?
+}

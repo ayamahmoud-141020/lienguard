@@ -1,0 +1,22 @@
+{
+  "kind": "coi",
+  "waiver": null,
+  "coi": {
+    "insuredName": {
+      "value": "Granite Drywall & Paint Inc.",
+      "confidence": 0.96,
+      "sourceText": "Granite Drywall & Paint Inc."
+    },
+    "certificateHolder": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "glExpiry": {
+      "value": "08/31/2027",
+      "confidence": 0.94,
+      "sourceText": "COMMERCIAL GENERAL LIABILITY LPM-GL-30881 08/31/2026 08/31/2027"
+    }
+  },
+  "notes": ""
+}

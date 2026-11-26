@@ -43,6 +43,10 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-12** One email draft per sub with at least one HOLD. The model only sees placeholders, and code fills in numbers. A post-check rejects unknown amounts or dates and missing issues; there is one regeneration, then a code template.
 - **R-13** Only human-approved drafts are sent, idempotently, with demo redirect. Every action is audit-logged.
 - **R-14** Write actions need `DEMO_PASSCODE`. Uploads accept only real PDFs/XLSX ≤ 4 MB. `/api/health` reports booleans only.
+- **R-15** *(added 2026-11-26, agreed by Aya in chat)* Gemini is a third AI provider (`LIENGUARD_AI=gemini`, `GEMINI_API_KEY`, `GEMINI_MODEL`), behind the same `Extractor` and `EmailWriter` interfaces, with the same Zod validation, confidence rules, placeholders and post-check. Anthropic stays as is. Free-tier safe: limited concurrency and backoff on 429.
+- **R-16** *(added 2026-11-26, Aya)* Same sample data gives the same result every time, and no batch ever stays `processing`: it ends `ready` or `failed` with a visible error.
+- **R-17** *(added 2026-11-26, Aya; amends R-14)* Reviewers can try the sample batch without a passcode. The passcode stays on: uploading own files (and reading them), editing drafts, sending emails.
+- **R-18** *(added 2026-11-26, Aya)* Be honest that the sample uses recorded readings, and say so where it is shown. If the free AI quota runs out, uploads say so clearly instead of failing silently.
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -118,7 +122,7 @@ Base case for each AC unless it says otherwise:
 - **AC-8.3** [R-10] The injection payment (Summit Air / PRK) is HOLD R03 with exposure $14,000, not SAFE. Its waiver amount is 1400000 cents, not 100000000.
 
 ### S-9 Screens
-- **AC-9.1** [R-11] `POST /api/batches/sample` (with passcode) creates a batch from `samples/` and returns its id. Calling it again creates a separate batch. Within a batch, the same PDF bytes are stored once (unique `batchId + sha256`).
+- **AC-9.1** [R-11] `POST /api/batches/sample` creates a batch from `samples/` and returns its id. Calling it again creates a separate batch. Within a batch, the same PDF bytes are stored once (unique `batchId + sha256`).
 - **AC-9.2** [R-11] The processing page sends one `POST /api/batches/:id/documents/:docId/extract` per PDF, at most 4 at a time, and shows a status per file (`queued`, `reading`, `done`, `needs review`). Tested via the client queue helper.
 - **AC-9.3** [R-11] For the sample batch, the dashboard view-model shows: exposed $ equal to `expected.json`, the SAFE and HOLD counts, and one row per payment (sub, project, invoice, amount, paid date, decision, rule chips, exposed).
 - **AC-9.4** [R-11] The payment-detail view-model lists its matched documents and one line per MVP rule with `PASS` or `HOLD` and the message.
@@ -135,10 +139,39 @@ Base case for each AC unless it says otherwise:
 - **AC-10.9** [R-13] A sender error sets status `failed` with the error text, and the draft can be sent again. Approve, edit, skip, send and fail each write one audit-log row (actor, action, draft id).
 
 ### S-11 Security, health, deploy
-- **AC-11.1** [R-14] Every write route (`sample`, `extract`, `drafts`, `approve`, `edit`, `skip`, `send`) returns 401 without the correct `x-demo-passcode` header.
+- **AC-11.1** [R-14, amended by R-17 on 2026-11-26] Every passcode-only write route (upload spreadsheets, upload PDF, `extract`, `evaluate`, `edit`, `send`) returns 401 without the correct `x-demo-passcode` header. The open routes are listed in AC-14.1.
 - **AC-11.2** [R-14] An upload whose bytes don't start with `%PDF-` (or `PK` for xlsx), or that is larger than 4 MB, returns 400 and is not stored.
 - **AC-11.3** [R-14] `GET /api/health` returns `{ ok, db: boolean, env: { [name]: boolean } }` and never any env value (tested by checking that no env value appears in the response).
 - **AC-11.4** [R-11] The README has these sections: problem, live link and passcode, where AI is and isn't used, how it was built, run locally, next steps, disclaimer. *(manual check)*
+
+### S-12 Gemini provider
+- **AC-12.1** [R-15] `LIENGUARD_AI=gemini` without `GEMINI_API_KEY` throws an error that names `GEMINI_API_KEY` and no value. `GEMINI_MODEL` has a default.
+- **AC-12.2** [R-3, R-15] `GeminiExtractor` makes one request per PDF: the bytes inline as base64 with `mimeType: application/pdf`, the configured model, `responseMimeType: application/json` and a `responseJsonSchema` built from the `Extraction` Zod schema. Valid JSON is re-validated with Zod and returned as `ok: true`.
+- **AC-12.3** [R-4] Output that isn't JSON or fails the schema gets one retry with feedback, then `ok: false`. An empty or blocked response gives `ok: false` (→ needsReview).
+- **AC-12.4** [R-15] A 429, a 503 or a network drop ("fetch failed") is retried with exponential backoff (up to 4 retries); other errors are not retried by backoff. At most `GEMINI_MAX_CONCURRENCY` (default 2) Gemini requests run at once per server instance.
+- **AC-12.5** [R-12, R-15] `GeminiEmailWriter` sends only the placeholder input (`forModel`) and returns `{subject, bodyTemplate}` validated by Zod. Its drafts go through the same post-check: a draft with a made-up amount is rejected.
+- **AC-12.6** [R-15] With `LIENGUARD_AI=gemini`, the app builds the Gemini extractor and writer. `/api/health` reports `GEMINI_API_KEY` as a boolean.
+- **AC-12.7** [R-15] `pnpm smoke:gemini` runs the live extractor on `samples/pdfs` and prints per-field agreement with the fixtures. *(manual, needs a key; never in CI)*
+
+### S-13 Deterministic sample batch, no stuck batches
+- **AC-13.1** [R-16] "Use sample data" creates a batch that is `ready` when the request returns. Its readings come from the recorded fixtures, never the live AI, so decisions, rule ids and exposure equal `expected.json` every time, whatever `LIENGUARD_AI` is.
+- **AC-13.2** [R-16] An extraction request that throws marks its document `needs_review` with the reason instead of leaving it `queued`.
+- **AC-13.3** [R-16] A `processing` batch is finished when it is viewed and either it has documents and none is `queued`, or nothing has happened for 3 minutes (also when it has no documents at all). Unread documents become needs review → HOLD.
+- **AC-13.4** [R-16] If evaluation throws, the batch becomes `failed` with an error message that the batch page shows.
+
+### S-14 Open sample data, passcode for the rest
+- **AC-14.1** [R-17] Without the passcode these POST routes work: sample batch, generate drafts, approve, skip. These return 401 without it: upload spreadsheets, upload PDF, extract, evaluate, edit draft, send. Every POST route is in exactly one of the two lists.
+- **AC-14.2** [R-17] Only the newest 20 sample batches are kept. Creating one more deletes the oldest sample batch; uploaded batches are never deleted.
+- **AC-14.3** [R-17] In the UI, passcode-only actions show "Demo passcode required — ask Aya" while locked. *(manual)*
+
+### S-15 Frontend redesign (no change to rules, matching or decisions)
+- **AC-15.1** App shell with sidebar, top bar and a "Demo access" popover (locked/unlocked). Home, batch dashboard, payment detail, email review, audit log and processing screens follow the brief from 2026-11-26. *(manual: Playwright screenshots in `docs/screenshots/`)*
+- **AC-15.2** All existing tests stay green; lint, typecheck and build pass (build verified by CI). Money and counts use tabular numbers. *(build: CI; tabular numbers: manual)*
+
+### S-16 Honest sample note; clear AI-quota message
+- **AC-16.1** [R-18] The sample batch page and the README show the same note: hand-checked readings, a live Gemini run matched 105 of 106 fields, upload your own PDFs for live extraction. Both use one shared sentence.
+- **AC-16.2** [R-18] When the AI provider returns 429 after backoff, the reading is `ok: false` with `code: "quota"`, and the document goes to needs review (HOLD, never a silent pass).
+- **AC-16.3** [R-18] The extract response then carries the notice "AI quota reached, try later". The processing screen shows it, and so does the dashboard of a batch with any quota-failed document.
 
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
@@ -177,31 +210,55 @@ Original questions:
 - **Q3, conditional waiver within the grace period.** Paid ≤ 5 days ago with only a conditional waiver. Proposed: **SAFE, no finding** (there are no warn rules in the MVP).
 
 ## 9. Stories
+_File lists updated 2026-11-25 after the first check report to match where the code actually lives (no scope change). S-15's list was widened on 2026-11-26 after check report 3 to declare `rule-labels.ts`, `screenshots.ts` and one read-only helper._
+
 | Story | Title | ACs | Depends on | Likely files |
 |---|---|---|---|---|
 | S-1 | Skeleton: Next.js, Prisma 6, Tailwind, Vitest, CI, env schema | AC-1.1–1.2 | — | `package.json`, `src/env.ts`, `prisma/schema.prisma` |
-| S-2 | Domain: money, dates, name normalization | AC-2.1–2.5 | S-1 | `src/domain/{money,dates}.ts`, `src/domain/matching/normalize.ts` |
+| S-2 | Domain: money, dates, name normalization | AC-2.1–2.5 | S-1 | `src/domain/{money,dates,types}.ts`, `src/domain/matching/normalize.ts` |
 | S-3 | Spreadsheet ingest with Zod | AC-3.1–3.4 | S-2 | `src/ingest/spreadsheets.ts` |
-| S-4 | Sample generator, fixtures, expected.json | AC-4.1–4.4 | S-2 | `scripts/generate-samples.ts`, `samples/**` |
+| S-4 | Sample generator, fixtures, expected.json | AC-4.1–4.4 | S-2 | `scripts/{generate-samples,sample-scenarios}.ts`, `samples/**` |
 | S-5 | Extraction: schemas, toDocument, fixture/Anthropic extractors, cache | AC-5.1–5.6 | S-2 | `src/ai/*` |
 | S-6 | Matching | AC-6.1–6.5 | S-2, S-5 | `src/domain/matching/match.ts` |
 | S-7 | Rules, exposure, decision | AC-7.1–7.14 | S-6 | `src/domain/rules/*`, `src/domain/{exposure,decision}.ts`, `config/states.json` |
-| S-8 | Batch pipeline + E2E on samples | AC-8.1–8.3 | S-3, S-4, S-7 | `src/pipeline/run-batch.ts`, `tests/e2e/samples.test.ts` |
-| S-9 | DB, API and screens: sample batch, processing, dashboard, detail | AC-9.1–9.4 | S-8 | `src/db/*`, `src/app/**` |
-| S-10 | Email writer, post-check, drafts, Resend send, audit | AC-10.1–10.9 | S-7, S-9 | `src/ai/email-*`, `src/ai/postcheck.ts`, `src/email/*`, `src/app/**/drafts` |
-| S-11 | Passcode, upload checks, health, deploy, README | AC-11.1–11.4 | S-9, S-10 | `src/lib/guard.ts`, `src/app/api/health`, `README.md` |
+| S-8 | Batch pipeline + E2E on samples | AC-8.1–8.3 | S-3, S-4, S-7 | `src/pipeline/{run-batch,evaluate,samples}.ts`, `tests/e2e/samples.test.ts` |
+| S-9 | DB, API and screens: sample batch, processing, dashboard, detail | AC-9.1–9.4 | S-8 | `src/db/*`, `src/server/{batches,guard,uploads,audit}.ts`, `src/view/models.ts`, `src/lib/queue.ts`, `src/pipeline/documents.ts`, `prisma/migrations/**`, `src/app/**` |
+| S-10 | Email writer, post-check, drafts, Resend send, audit | AC-10.1–10.9 | S-7, S-9 | `src/email/*` (writer, postcheck, issues, sender, workflow), `src/server/drafts.ts`, `src/app/**/drafts`, `src/app/**/audit` |
+| S-11 | Passcode, upload checks, health, deploy, README | AC-11.1–11.4 | S-9, S-10 | `src/server/{guard,uploads,health}.ts`, `src/app/api/health`, `README.md` |
+| S-12 | Gemini provider (extractor, writer, backoff, smoke script) | AC-12.1–12.7 | S-5, S-10 | `src/ai/gemini*.ts`, `src/email/gemini-writer.ts`, `src/env.ts`, `src/server/{batches,drafts,health}.ts`, `scripts/smoke-gemini.ts`, `docs/decisions/0007-*.md`, `package.json` |
+| S-13 | Deterministic sample batch; no stuck batches | AC-13.1–13.4 | S-9, S-12 | `src/server/batches.ts`, `src/pipeline/lifecycle.ts`, `src/app/api/batches/**`, `prisma/**` |
+| S-14 | Open sample data; passcode for uploads, edit and send | AC-14.1–14.3 | S-11, S-13 | `src/server/{guard,access}.ts`, `src/app/api/**`, `tests/unit/security.test.ts` |
+| S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `src/view/rule-labels.ts`, `src/server/batches.ts` (read-only `getDocumentReadings` for the payment page), `scripts/screenshots.ts`, `docs/screenshots/**`, `package.json` |
+| S-16 | Honest sample note; AI-quota message | AC-16.1–16.3 | S-12, S-15 | `src/view/copy.ts`, `src/ai/{extractor,gemini-extractor}.ts`, `src/server/batches.ts`, `src/app/api/batches/[id]/documents/[docId]/extract/route.ts`, `src/app/_components/processing.tsx`, `src/app/batches/[id]/page.tsx`, `README.md` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
 |---|---|---|---|
-| S-1 | Skeleton | — | agreed |
-| S-2 | Domain basics | S-1 | agreed |
-| S-3 | Spreadsheet ingest | S-2 | agreed |
-| S-4 | Sample data | S-2 | agreed |
-| S-5 | Extraction | S-2 | agreed |
-| S-6 | Matching | S-2, S-5 | agreed |
-| S-7 | Rules, exposure, decision | S-6 | agreed |
-| S-8 | Pipeline + E2E | S-3, S-4, S-7 | agreed |
-| S-9 | DB, API, screens | S-8 | agreed |
-| S-10 | Email drafts and send | S-7, S-9 | agreed |
-| S-11 | Security, health, deploy, README | S-9, S-10 | agreed |
+| S-1 | Skeleton | — | awaiting-merge |
+| S-2 | Domain basics | S-1 | awaiting-merge |
+| S-3 | Spreadsheet ingest | S-2 | awaiting-merge |
+| S-4 | Sample data | S-2 | awaiting-merge |
+| S-5 | Extraction | S-2 | awaiting-merge |
+| S-6 | Matching | S-2, S-5 | awaiting-merge |
+| S-7 | Rules, exposure, decision | S-6 | awaiting-merge |
+| S-8 | Pipeline + E2E | S-3, S-4, S-7 | awaiting-merge |
+| S-9 | DB, API, screens | S-8 | awaiting-merge |
+| S-10 | Email drafts and send | S-7, S-9 | awaiting-merge |
+| S-11 | Security, health, deploy, README | S-9, S-10 | awaiting-merge |
+| S-12 | Gemini provider | S-5, S-10 | awaiting-merge |
+| S-13 | Deterministic sample, no stuck batches | S-9, S-12 | awaiting-merge |
+| S-14 | Open sample data | S-11, S-13 | awaiting-merge |
+| S-15 | Frontend redesign | S-13, S-14 | awaiting-merge |
+| S-16 | Honest sample note; AI-quota message | S-12, S-15 | awaiting-merge |
+
+## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
+After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
+- **AC-1.1**: verified by CI on the PR (lint, typecheck, unit, E2E and `pnpm build` all pass on 98f91d4). The auditor is not allowed to run `pnpm build`.
+- **AC-11.4**: manual. The README sections were inspected by the auditor.
+- **AC-12.7**: manual. The live run scored 105/106 fields, 17/17 needsReview and 12/12 payments against `expected.json` (see README "Live results").
+
+### Sign-off for S-13 to S-16 (2026-11-26, Aya, in chat)
+After check round `docs/checks/2026-11-26-check-5.md` (all automated checks pass), Aya accepted:
+- **AC-14.3**: manual. While locked, protected actions show "Demo passcode required — ask Aya" (screenshots 08, 09).
+- **AC-15.1**: manual. The redesign follows the 2026-11-26 brief (`docs/screenshots/01–17`).
+- **AC-15.2**: tests, lint and typecheck verified by the auditor; build verified by CI on b2aa658; tabular numbers checked by hand.

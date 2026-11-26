@@ -1,0 +1,22 @@
+{
+  "kind": "coi",
+  "waiver": null,
+  "coi": {
+    "insuredName": {
+      "value": "Brightway Electric Inc.",
+      "confidence": 0.96,
+      "sourceText": "Brightway Electric Inc."
+    },
+    "certificateHolder": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "glExpiry": {
+      "value": "01/31/2027",
+      "confidence": 0.94,
+      "sourceText": "COMMERCIAL GENERAL LIABILITY GL-7731-0119 01/31/2026 01/31/2027"
+    }
+  },
+  "notes": ""
+}

@@ -1,0 +1,57 @@
+{
+  "kind": "waiver",
+  "waiver": {
+    "claimantName": {
+      "value": "Granite Drywall & Paint Inc.",
+      "confidence": 0.97,
+      "sourceText": "Granite Drywall & Paint Inc."
+    },
+    "customerName": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "projectName": {
+      "value": "Parkway Retail Center",
+      "confidence": 0.96,
+      "sourceText": "Parkway Retail Center"
+    },
+    "type": {
+      "value": "unconditional",
+      "confidence": 0.96,
+      "sourceText": "UNCONDITIONAL WAIVER AND RELEASE ON PROGRESS PAYMENT"
+    },
+    "scope": {
+      "value": "progress",
+      "confidence": 0.96,
+      "sourceText": "UNCONDITIONAL WAIVER AND RELEASE ON PROGRESS PAYMENT"
+    },
+    "amount": {
+      "value": "$22,000.00",
+      "confidence": 0.96,
+      "sourceText": "$22,000.00"
+    },
+    "throughDate": {
+      "value": "September 30, 2026",
+      "confidence": 0.96,
+      "sourceText": "September 30, 2026"
+    },
+    "signed": {
+      "value": true,
+      "confidence": 0.93,
+      "sourceText": "[handwritten signature] Marco Bell"
+    },
+    "notarized": {
+      "value": false,
+      "confidence": 0.92,
+      "sourceText": ""
+    },
+    "exceptions": {
+      "value": null,
+      "confidence": 0.9,
+      "sourceText": "Exceptions: none"
+    }
+  },
+  "coi": null,
+  "notes": ""
+}

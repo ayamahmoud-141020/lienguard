@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* LienGuard design tokens. One brand colour (deep green) for primary actions;
+   status colours are used only for status. */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #f3f5f7;
+  --color-surface: #ffffff;
+  --color-subtle: #f7f9fa;
+  --color-line: #e2e6eb;
+  --color-line-strong: #cdd3da;
+  --color-ink: #0e1a24;
+  --color-ink-2: #334351;
+  --color-muted: #5f6f7e;
+
+  --color-brand: #0b5d45;
+  --color-brand-hover: #084a37;
+  --color-brand-soft: #e6f1ec;
+
+  --color-safe: #12723f;
+  --color-safe-bg: #e9f6ef;
+  --color-safe-line: #b9dfca;
+  --color-hold: #b4231b;
+  --color-hold-bg: #fdeeec;
+  --color-hold-line: #f3c4bf;
+  --color-warn: #9a5300;
+  --color-warn-bg: #fff5e2;
+  --color-warn-line: #f0d39a;
+  --color-review: #6b3fc9;
+  --color-review-bg: #f3effd;
+  --color-review-line: #d8cbf5;
+
+  --radius-card: 8px;
+  --shadow-card: 0 1px 2px rgb(14 26 36 / 0.05);
+  --shadow-pop: 0 8px 24px rgb(14 26 36 / 0.12), 0 1px 2px rgb(14 26 36 / 0.06);
+
+  --text-2xs: 11px;
+  --text-2xs--line-height: 16px;
+}
+
+@layer base {
+  html {
+    font-feature-settings: "cv11", "ss01";
+    color-scheme: light;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-size: 14px;
+    line-height: 20px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

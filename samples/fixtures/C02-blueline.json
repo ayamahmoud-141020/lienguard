@@ -1,0 +1,22 @@
+{
+  "kind": "coi",
+  "waiver": null,
+  "coi": {
+    "insuredName": {
+      "value": "BlueLine Plumbing Co.",
+      "confidence": 0.96,
+      "sourceText": "BlueLine Plumbing Co."
+    },
+    "certificateHolder": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "glExpiry": {
+      "value": "05/15/2027",
+      "confidence": 0.94,
+      "sourceText": "COMMERCIAL GENERAL LIABILITY CGL-55120 05/15/2026 05/15/2027"
+    }
+  },
+  "notes": ""
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "coi",
+  "waiver": null,
+  "coi": {
+    "insuredName": {
+      "value": "Northstar Fire Protection, LLC",
+      "confidence": 0.96,
+      "sourceText": "Northstar Fire Protection, LLC"
+    },
+    "certificateHolder": {
+      "value": "Harborline Builders, Inc.",
+      "confidence": 0.96,
+      "sourceText": "Harborline Builders, Inc."
+    },
+    "glExpiry": {
+      "value": "02/28/2027",
+      "confidence": 0.94,
+      "sourceText": "COMMERCIAL GENERAL LIABILITY CGL-55377 02/28/2026 02/28/2027"
+    }
+  },
+  "notes": ""
+}
