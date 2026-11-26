@@ -9,8 +9,8 @@ function same(a: string, b: string): boolean {
 }
 
 /**
- * Every write action needs the shared demo passcode, so strangers can't send
- * emails or spend AI credits through the public demo. Returns a 401 response or null.
+ * Checks the shared demo passcode. Which actions need it is decided in access.ts:
+ * uploads (live AI reading), editing drafts and sending email. Returns a 401 response or null.
  * Without DEMO_PASSCODE, writes are allowed only outside production (local dev).
  */
 export function requirePasscode(req: Request, env: { DEMO_PASSCODE?: string; NODE_ENV?: string } = process.env): Response | null {

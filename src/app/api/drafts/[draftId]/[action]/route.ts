@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { requirePasscode, actorFrom } from "@/server/guard";
+import { actorFrom } from "@/server/guard";
+import { draftAction, guard } from "@/server/access";
 import { getSender, prismaDraftStore } from "@/server/drafts";
 import { approveDraft, editDraft, sendDraft, skipDraft } from "@/email/workflow";
 import { loadEnv } from "@/env";
@@ -8,11 +9,11 @@ export const runtime = "nodejs";
 
 const EditBody = z.object({ body: z.string().min(1).max(20_000), subject: z.string().min(1).max(300).optional() });
 
-/** approve | skip | edit | send. Every action needs the passcode and is written to the audit log. */
+/** approve | skip (open) · edit | send (passcode). Every action is written to the audit log. */
 export async function POST(req: Request, { params }: { params: Promise<{ draftId: string; action: string }> }) {
-  const denied = requirePasscode(req);
-  if (denied) return denied;
   const { draftId, action } = await params;
+  const denied = guard(req, draftAction(action));
+  if (denied) return denied;
   const actor = actorFrom(req);
   try {
     switch (action) {

@@ -44,6 +44,8 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-13** Only human-approved drafts are sent, idempotently, with demo redirect. Every action is audit-logged.
 - **R-14** Write actions need `DEMO_PASSCODE`. Uploads accept only real PDFs/XLSX ≤ 4 MB. `/api/health` reports booleans only.
 - **R-15** *(added 2026-11-26, agreed by Aya in chat)* Gemini is a third AI provider (`LIENGUARD_AI=gemini`, `GEMINI_API_KEY`, `GEMINI_MODEL`), behind the same `Extractor` and `EmailWriter` interfaces, with the same Zod validation, confidence rules, placeholders and post-check. Anthropic stays as is. Free-tier safe: limited concurrency and backoff on 429.
+- **R-16** *(added 2026-11-26, Aya)* Same sample data gives the same result every time, and no batch ever stays `processing`: it ends `ready` or `failed` with a visible error.
+- **R-17** *(added 2026-11-26, Aya; amends R-14)* Reviewers can try the sample batch without a passcode. The passcode stays on: uploading own files (and reading them), editing drafts, sending emails.
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -150,6 +152,21 @@ Base case for each AC unless it says otherwise:
 - **AC-12.6** [R-15] With `LIENGUARD_AI=gemini`, the app builds the Gemini extractor and writer. `/api/health` reports `GEMINI_API_KEY` as a boolean.
 - **AC-12.7** [R-15] `pnpm smoke:gemini` runs the live extractor on `samples/pdfs` and prints per-field agreement with the fixtures. *(manual, needs a key; never in CI)*
 
+### S-13 Deterministic sample batch, no stuck batches
+- **AC-13.1** [R-16] "Use sample data" creates a batch that is `ready` when the request returns. Its readings come from the recorded fixtures, never the live AI, so decisions, rule ids and exposure equal `expected.json` every time, whatever `LIENGUARD_AI` is.
+- **AC-13.2** [R-16] An extraction request that throws marks its document `needs_review` with the reason instead of leaving it `queued`.
+- **AC-13.3** [R-16] A `processing` batch is finished when it is viewed and either no document is `queued` or nothing has happened for 3 minutes. Unread documents become needs review → HOLD.
+- **AC-13.4** [R-16] If evaluation throws, the batch becomes `failed` with an error message that the batch page shows.
+
+### S-14 Open sample data, passcode for the rest
+- **AC-14.1** [R-17] Without the passcode these POST routes work: sample batch, generate drafts, approve, skip. These return 401 without it: upload spreadsheets, upload PDF, extract, evaluate, edit draft, send. Every POST route is in exactly one of the two lists.
+- **AC-14.2** [R-17] Only the newest 20 sample batches are kept. Creating one more deletes the oldest sample batch; uploaded batches are never deleted.
+- **AC-14.3** [R-17] In the UI, passcode-only actions show "Demo passcode required — ask Aya" while locked. *(manual)*
+
+### S-15 Frontend redesign (no logic change)
+- **AC-15.1** App shell with sidebar, top bar and a "Demo access" popover (locked/unlocked). Home, batch dashboard, payment detail, email review, audit log and processing screens follow the brief from 2026-11-26. *(manual: Playwright screenshots in `docs/screenshots/`)*
+- **AC-15.2** All existing tests stay green; lint, typecheck and build pass. Money and counts use tabular numbers.
+
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
 - `Project(code, name, state, ownerName)`
@@ -203,6 +220,9 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-10 | Email writer, post-check, drafts, Resend send, audit | AC-10.1–10.9 | S-7, S-9 | `src/email/*` (writer, postcheck, issues, sender, workflow), `src/server/drafts.ts`, `src/app/**/drafts`, `src/app/**/audit` |
 | S-11 | Passcode, upload checks, health, deploy, README | AC-11.1–11.4 | S-9, S-10 | `src/server/{guard,uploads,health}.ts`, `src/app/api/health`, `README.md` |
 | S-12 | Gemini provider (extractor, writer, backoff, smoke script) | AC-12.1–12.7 | S-5, S-10 | `src/ai/gemini*.ts`, `src/email/gemini-writer.ts`, `src/env.ts`, `src/server/{batches,drafts,health}.ts`, `scripts/smoke-gemini.ts`, `docs/decisions/0007-*.md`, `package.json` |
+| S-13 | Deterministic sample batch; no stuck batches | AC-13.1–13.4 | S-9, S-12 | `src/server/batches.ts`, `src/pipeline/lifecycle.ts`, `src/app/api/batches/**`, `prisma/**` |
+| S-14 | Open sample data; passcode for uploads, edit and send | AC-14.1–14.3 | S-11, S-13 | `src/server/{guard,access}.ts`, `src/app/api/**`, `tests/unit/security.test.ts` |
+| S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `docs/screenshots/**`, `package.json` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -219,6 +239,9 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-10 | Email drafts and send | S-7, S-9 | awaiting-merge |
 | S-11 | Security, health, deploy, README | S-9, S-10 | awaiting-merge |
 | S-12 | Gemini provider | S-5, S-10 | awaiting-merge |
+| S-13 | Deterministic sample, no stuck batches | S-9, S-12 | checking |
+| S-14 | Open sample data | S-11, S-13 | checking |
+| S-15 | Frontend redesign | S-13, S-14 | coding |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

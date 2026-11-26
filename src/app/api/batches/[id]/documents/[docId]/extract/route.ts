@@ -1,11 +1,11 @@
-import { requirePasscode } from "@/server/guard";
+import { guard } from "@/server/access";
 import { extractDocument } from "@/server/batches";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string; docId: string }> }) {
-  const denied = requirePasscode(req);
+  const denied = guard(req, "document.extract");
   if (denied) return denied;
   const { id, docId } = await params;
   const status = await extractDocument(id, docId);

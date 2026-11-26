@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { requirePasscode } from "@/server/guard";
+import { PASSCODE_ACTIONS, PUBLIC_ACTIONS, draftAction, guard } from "@/server/access";
 import { checkUpload, MAX_UPLOAD_BYTES } from "@/server/uploads";
 import { healthReport } from "@/server/health";
 
@@ -23,10 +24,37 @@ describe("S-11 security", () => {
     expect(requirePasscode(req("anything"), { NODE_ENV: "production" })?.status).toBe(401);
   });
 
-  it("AC-11.1 every POST route calls requirePasscode", () => {
+  it("AC-14.1 every POST route goes through guard() with its declared action", () => {
+    const declared: Record<string, RegExp> = {
+      "src/app/api/batches/sample/route.ts": /guard\(req, "batch\.sample"\)/,
+      "src/app/api/batches/route.ts": /guard\(req, "batch\.upload"\)/,
+      "src/app/api/batches/[id]/documents/route.ts": /guard\(req, "document\.upload"\)/,
+      "src/app/api/batches/[id]/documents/[docId]/extract/route.ts": /guard\(req, "document\.extract"\)/,
+      "src/app/api/batches/[id]/evaluate/route.ts": /guard\(req, "batch\.evaluate"\)/,
+      "src/app/api/batches/[id]/drafts/route.ts": /guard\(req, "drafts\.generate"\)/,
+      "src/app/api/drafts/[draftId]/[action]/route.ts": /guard\(req, draftAction\(action\)\)/,
+    };
     const posts = routeFiles("src/app/api").filter((f) => /export async function POST/.test(readFileSync(f, "utf8")));
-    expect(posts.length).toBeGreaterThanOrEqual(7);
-    for (const f of posts) expect(readFileSync(f, "utf8"), f).toMatch(/requirePasscode\(req\)/);
+    expect(posts.sort()).toEqual(Object.keys(declared).sort());
+    for (const f of posts) {
+      const src = readFileSync(f, "utf8");
+      expect(src, f).toMatch(declared[f]!);
+      expect(src, f).not.toMatch(/requirePasscode\(/);
+    }
+  });
+
+  it("AC-14.1 sample, generate drafts, approve and skip are open; uploads, extract, evaluate, edit and send need the passcode", () => {
+    const env = { DEMO_PASSCODE: "harbor-42", NODE_ENV: "production" };
+    expect([...PUBLIC_ACTIONS].sort()).toEqual(["batch.sample", "draft.approve", "draft.skip", "drafts.generate"]);
+    expect([...PASSCODE_ACTIONS].sort()).toEqual(["batch.evaluate", "batch.upload", "document.extract", "document.upload", "draft.edit", "draft.send"]);
+    for (const a of PUBLIC_ACTIONS) expect(guard(req(), a, env), a).toBeNull();
+    for (const a of PASSCODE_ACTIONS) {
+      expect(guard(req(), a, env)?.status, a).toBe(401);
+      expect(guard(req("harbor-42"), a, env), a).toBeNull();
+    }
+    expect(draftAction("approve")).toBe("draft.approve");
+    expect(draftAction("send")).toBe("draft.send");
+    expect(draftAction("nonsense")).toBe("draft.send");
   });
 
   it("AC-11.2 uploads must have the right magic bytes and be at most 4 MB", () => {

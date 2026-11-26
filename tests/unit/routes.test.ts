@@ -35,9 +35,9 @@ describe("S-9 sample batch route", () => {
     expect(createSampleBatch).toHaveBeenCalledTimes(2);
   });
 
-  it("AC-9.1 without the passcode no batch is created", async () => {
+  it("AC-14.1 without the passcode a sample batch is still created (open demo)", async () => {
     const res = await call();
-    expect(res.status).toBe(401);
-    expect(created).toHaveLength(0);
+    expect(res.status).toBe(200);
+    expect(created).toHaveLength(1);
   });
 });

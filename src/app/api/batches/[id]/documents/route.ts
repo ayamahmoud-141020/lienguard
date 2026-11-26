@@ -1,4 +1,4 @@
-import { requirePasscode } from "@/server/guard";
+import { guard } from "@/server/access";
 import { addDocument } from "@/server/batches";
 import { readUpload } from "@/server/uploads";
 
@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 /** One PDF per request (keeps each request under the hosting body-size limit). */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const denied = requirePasscode(req);
+  const denied = guard(req, "document.upload");
   if (denied) return denied;
   const { id } = await params;
   const form = await req.formData();
