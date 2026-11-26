@@ -47,7 +47,7 @@ describe("S-11 security", () => {
     expect(report).toEqual({
       ok: true,
       db: true,
-      env: { DATABASE_URL: true, DIRECT_URL: false, ANTHROPIC_API_KEY: true, RESEND_API_KEY: true, DEMO_PASSCODE: true, DEMO_EMAIL_OVERRIDE: false },
+      env: { DATABASE_URL: true, DIRECT_URL: false, ANTHROPIC_API_KEY: true, GEMINI_API_KEY: false, RESEND_API_KEY: true, DEMO_PASSCODE: true, DEMO_EMAIL_OVERRIDE: false },
     });
     const text = JSON.stringify(report);
     for (const v of Object.values(secretEnv)) expect(text).not.toContain(v);

@@ -33,10 +33,10 @@ LienGuard takes the payments spreadsheet and the PDFs that arrived. For every pa
 
 | Step | Who does it | Why |
 |---|---|---|
-| Reading messy PDFs (different layouts, typed `/s/` vs drawn signatures, scans) | **Claude** (PDF input + structured output, Zod-validated) | This is what LLMs are good at |
+| Reading messy PDFs (different layouts, typed `/s/` vs drawn signatures, scans) | **An LLM**: Claude or Gemini, chosen by `LIENGUARD_AI` (PDF input + structured output, Zod-validated) | This is what LLMs are good at |
 | Parsing money and dates | **Code** (integer cents, ISO dates) | The model returns raw text like `"$18,000.00"`; code parses it, so no arithmetic happens in the model |
 | Matching, rules, exposure, SAFE/HOLD | **Code**: pure functions with tests | Money and legal-risk decisions must be predictable and explainable ([ADR-0001](docs/decisions/0001-rules-in-code.md)) |
-| Email wording | **Claude** | Friendly, specific prose |
+| Email wording | **The same LLM** | Friendly, specific prose |
 | Numbers in emails | **Code** | The model only sees placeholders such as `{{AMOUNT_1}}`. Code fills them in, then a **post-check** rejects any amount or date not in the data. After one regeneration it falls back to a code-built template |
 | Sending | **A person** approves every email ([ADR-0005](docs/decisions/0005-human-approval-before-send.md)) | Nothing leaves the system without a human click |
 
@@ -49,7 +49,7 @@ LienGuard takes the payments spreadsheet and the PDFs that arrived. For every pa
 
 I built LienGuard with **Claude Code**, using a small "software factory" I set up for working with AI agents in a disciplined way:
 
-- **Spec before code:** [`docs/features/001-lienguard.md`](docs/features/001-lienguard.md) has 14 requirements, 60 acceptance criteria and 11 stories. A human approved it (**Gate A**) before any product code was written.
+- **Spec before code:** [`docs/features/001-lienguard.md`](docs/features/001-lienguard.md) has 15 requirements, 67 acceptance criteria and 12 stories. A human approved it (**Gate A**) before any product code was written.
 - **Test first:** every story started with failing tests named after their acceptance criteria (e.g. `AC-7.12 R02 + R04 on one payment → exposure is the max, not the sum`), then the minimal code, then one commit per story (`story(S-n): …`).
 - **An answer key written by hand:** [`samples/EXPECTED.md`](samples/EXPECTED.md) lists the expected decision for all 12 sample payments. The end-to-end test runs the whole pipeline (with recorded extractions, no network) and must match it exactly.
 - **Independent auditor:** a separate agent ([`.claude/agents/auditor.md`](.claude/agents/auditor.md)) that never sees the builder's reasoning reruns lint, typecheck and tests, and maps every acceptance criterion to a test. Reports are in [`docs/checks/`](docs/checks/).
@@ -57,7 +57,7 @@ I built LienGuard with **Claude Code**, using a small "software factory" I set u
 - **Decisions recorded** as ADRs in [`docs/decisions/`](docs/decisions/). The rules for agents are in [`CLAUDE.md`](CLAUDE.md).
 - **CI** (GitHub Actions): lint → typecheck → unit tests → E2E on samples → build. No secrets and no network.
 
-Stack: Next.js (App Router) + TypeScript · Tailwind · Prisma + Postgres (Neon) · Anthropic API (`claude-opus-5-5`, low effort) · Resend · SheetJS · pdf-lib · Zod · Vitest · Vercel.
+Stack: Next.js (App Router) + TypeScript · Tailwind · Prisma + Postgres (Neon) · Anthropic API (`claude-opus-5-5`, low effort) or Gemini API ([ADR-0007](docs/decisions/0007-gemini-provider.md)) · Resend · SheetJS · pdf-lib · Zod · Vitest · Vercel.
 
 ## Run locally
 
@@ -68,6 +68,7 @@ pnpm prisma migrate deploy      # needs DATABASE_URL / DIRECT_URL in the shell e
 pnpm dev                        # http://localhost:3000 → "Use sample data"
 pnpm test                       # 70+ tests, no network
 pnpm samples                    # regenerate the fictional sample batch
+pnpm smoke:gemini               # live: Gemini reads the sample PDFs, compared with fixtures
 ```
 
 Set `LIENGUARD_AI=fixture` and `LIENGUARD_EMAIL=fake` to run the full app with no API keys. Sample PDFs are then "read" from recorded fixtures and emails are only recorded.

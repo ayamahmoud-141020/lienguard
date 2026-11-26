@@ -17,10 +17,12 @@
     "test:unit": "vitest run tests/unit",
     "test:e2e": "vitest run tests/e2e",
     "samples": "tsx scripts/generate-samples.ts",
+    "smoke:gemini": "tsx scripts/smoke-gemini.ts",
     "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
+    "@google/genai": "3.6.1",
     "@prisma/client": "^6.19.3",
     "next": "^15.5.29",
     "pdf-lib": "^1.17.1",

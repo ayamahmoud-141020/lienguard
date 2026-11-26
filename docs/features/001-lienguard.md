@@ -43,6 +43,7 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-12** One email draft per sub with at least one HOLD. The model only sees placeholders, and code fills in numbers. A post-check rejects unknown amounts or dates and missing issues; there is one regeneration, then a code template.
 - **R-13** Only human-approved drafts are sent, idempotently, with demo redirect. Every action is audit-logged.
 - **R-14** Write actions need `DEMO_PASSCODE`. Uploads accept only real PDFs/XLSX ≤ 4 MB. `/api/health` reports booleans only.
+- **R-15** *(added 2026-11-26, agreed by Aya in chat)* Gemini is a third AI provider (`LIENGUARD_AI=gemini`, `GEMINI_API_KEY`, `GEMINI_MODEL`), behind the same `Extractor` and `EmailWriter` interfaces, with the same Zod validation, confidence rules, placeholders and post-check. Anthropic stays as is. Free-tier safe: limited concurrency and backoff on 429.
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -140,6 +141,15 @@ Base case for each AC unless it says otherwise:
 - **AC-11.3** [R-14] `GET /api/health` returns `{ ok, db: boolean, env: { [name]: boolean } }` and never any env value (tested by checking that no env value appears in the response).
 - **AC-11.4** [R-11] The README has these sections: problem, live link and passcode, where AI is and isn't used, how it was built, run locally, next steps, disclaimer. *(manual check)*
 
+### S-12 Gemini provider
+- **AC-12.1** [R-15] `LIENGUARD_AI=gemini` without `GEMINI_API_KEY` throws an error that names `GEMINI_API_KEY` and no value. `GEMINI_MODEL` has a default.
+- **AC-12.2** [R-3, R-15] `GeminiExtractor` makes one request per PDF: the bytes inline as base64 with `mimeType: application/pdf`, the configured model, `responseMimeType: application/json` and a `responseJsonSchema` built from the `Extraction` Zod schema. Valid JSON is re-validated with Zod and returned as `ok: true`.
+- **AC-12.3** [R-4] Output that isn't JSON or fails the schema gets one retry with feedback, then `ok: false`. An empty or blocked response gives `ok: false` (→ needsReview).
+- **AC-12.4** [R-15] A 429 or 503 is retried with exponential backoff (up to 4 retries); other errors are not retried by backoff. At most `GEMINI_MAX_CONCURRENCY` (default 2) Gemini requests run at once per server instance.
+- **AC-12.5** [R-12, R-15] `GeminiEmailWriter` sends only the placeholder input (`forModel`) and returns `{subject, bodyTemplate}` validated by Zod. Its drafts go through the same post-check: a draft with a made-up amount is rejected.
+- **AC-12.6** [R-15] With `LIENGUARD_AI=gemini`, the app builds the Gemini extractor and writer. `/api/health` reports `GEMINI_API_KEY` as a boolean.
+- **AC-12.7** [R-15] `pnpm smoke:gemini` runs the live extractor on `samples/pdfs` and prints per-field agreement with the fixtures. *(manual, needs a key; never in CI)*
+
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
 - `Project(code, name, state, ownerName)`
@@ -192,6 +202,7 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-9 | DB, API and screens: sample batch, processing, dashboard, detail | AC-9.1–9.4 | S-8 | `src/db/*`, `src/server/{batches,guard,uploads,audit}.ts`, `src/view/models.ts`, `src/lib/queue.ts`, `src/pipeline/documents.ts`, `prisma/migrations/**`, `src/app/**` |
 | S-10 | Email writer, post-check, drafts, Resend send, audit | AC-10.1–10.9 | S-7, S-9 | `src/email/*` (writer, postcheck, issues, sender, workflow), `src/server/drafts.ts`, `src/app/**/drafts`, `src/app/**/audit` |
 | S-11 | Passcode, upload checks, health, deploy, README | AC-11.1–11.4 | S-9, S-10 | `src/server/{guard,uploads,health}.ts`, `src/app/api/health`, `README.md` |
+| S-12 | Gemini provider (extractor, writer, backoff, smoke script) | AC-12.1–12.7 | S-5, S-10 | `src/ai/gemini*.ts`, `src/email/gemini-writer.ts`, `src/env.ts`, `src/server/{batches,drafts,health}.ts`, `scripts/smoke-gemini.ts`, `docs/decisions/0007-*.md`, `package.json` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -207,3 +218,4 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-9 | DB, API, screens | S-8 | checking |
 | S-10 | Email drafts and send | S-7, S-9 | checking |
 | S-11 | Security, health, deploy, README | S-9, S-10 | checking |
+| S-12 | Gemini provider | S-5, S-10 | checking |

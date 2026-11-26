@@ -1,4 +1,4 @@
-const CHECKED = ["DATABASE_URL", "DIRECT_URL", "ANTHROPIC_API_KEY", "RESEND_API_KEY", "DEMO_PASSCODE", "DEMO_EMAIL_OVERRIDE"] as const;
+const CHECKED = ["DATABASE_URL", "DIRECT_URL", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "RESEND_API_KEY", "DEMO_PASSCODE", "DEMO_EMAIL_OVERRIDE"] as const;
 
 export type Health = { ok: boolean; db: boolean; env: Record<(typeof CHECKED)[number], boolean> };
 

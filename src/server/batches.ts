@@ -5,6 +5,7 @@ import { prisma } from "@/db/prisma";
 import { loadEnv } from "@/env";
 import { cachedExtract, type ExtractionCache } from "@/ai/cache";
 import { AnthropicExtractor } from "@/ai/anthropic-extractor";
+import { GeminiExtractor } from "@/ai/gemini-extractor";
 import { Extraction } from "@/ai/schemas";
 import { toDocument } from "@/ai/to-document";
 import type { ExtractOutcome, Extractor } from "@/ai/extractor";
@@ -18,6 +19,7 @@ const SAMPLES_DIR = join(process.cwd(), "samples");
 export function getExtractor(): Extractor {
   const env = loadEnv();
   if (env.LIENGUARD_AI === "fixture") return loadFixtureExtractor(SAMPLES_DIR);
+  if (env.LIENGUARD_AI === "gemini") return GeminiExtractor.fromApiKey(env.GEMINI_API_KEY ?? "", env.GEMINI_MODEL, env.GEMINI_MAX_CONCURRENCY);
   return AnthropicExtractor.fromApiKey(env.ANTHROPIC_API_KEY ?? "", env.ANTHROPIC_MODEL);
 }
 

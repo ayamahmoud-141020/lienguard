@@ -1,3 +1,4 @@
+import { GeminiEmailWriter } from "@/email/gemini-writer";
 import type { Prisma, EmailDraft } from "@prisma/client";
 import { prisma } from "@/db/prisma";
 import { loadEnv } from "@/env";
@@ -10,7 +11,9 @@ import type { SubIssues } from "@/email/issues";
 
 export function getWriter(): EmailWriter {
   const env = loadEnv();
-  return env.LIENGUARD_AI === "fixture" ? new FixtureEmailWriter() : new AnthropicEmailWriter(env.ANTHROPIC_API_KEY ?? "", env.ANTHROPIC_MODEL);
+  if (env.LIENGUARD_AI === "fixture") return new FixtureEmailWriter();
+  if (env.LIENGUARD_AI === "gemini") return GeminiEmailWriter.fromApiKey(env.GEMINI_API_KEY ?? "", env.GEMINI_MODEL, env.GEMINI_MAX_CONCURRENCY);
+  return new AnthropicEmailWriter(env.ANTHROPIC_API_KEY ?? "", env.ANTHROPIC_MODEL);
 }
 
 export function getSender(): EmailSender {
