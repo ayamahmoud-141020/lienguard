@@ -10,7 +10,8 @@ export type BatchState = { status: string; updatedAt: Date; docStatuses: string[
 export function nextBatchAction(b: BatchState, now: Date): "none" | "evaluate" | "wait" {
   if (b.status !== "processing") return "none";
   if (b.docStatuses.length > 0 && !b.docStatuses.includes("queued")) return "evaluate";
-  if (b.docStatuses.length > 0 && now.getTime() - b.updatedAt.getTime() > STALE_MS) return "evaluate";
+  // Idle too long: finish it, even with no documents at all (e.g. an upload whose PDFs never arrived).
+  if (now.getTime() - b.updatedAt.getTime() > STALE_MS) return "evaluate";
   return "wait";
 }
 

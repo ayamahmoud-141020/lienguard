@@ -133,7 +133,8 @@ export async function extractDocument(batchId: string, documentId: string): Prom
   return read.status === "done" ? "done" : "needs review";
 }
 
-function outcomeOf(json: Prisma.JsonValue | null): ExtractOutcome {
+/** A stored reading as an ExtractOutcome; missing or invalid means not read → needs review. */
+export function storedOutcome(json: Prisma.JsonValue | null): ExtractOutcome {
   if (!json || typeof json !== "object" || Array.isArray(json)) return { ok: false, reason: "not read yet" };
   const o = json as { ok?: unknown; extraction?: unknown; reason?: unknown };
   if (o.ok === true) {
@@ -151,7 +152,7 @@ export async function evaluateStoredBatch(batchId: string): Promise<BatchResult>
     data: { status: "needs_review", extractionJson: json({ ok: false, reason: "reading was interrupted before this document was read" }) },
   });
   const docs = await prisma.document.findMany({ where: { batchId }, orderBy: { fileName: "asc" }, select: { id: true, fileName: true, extractionJson: true } });
-  const extracted: ExtractedDocument[] = docs.map((d) => ({ id: d.id, fileName: d.fileName, outcome: outcomeOf(d.extractionJson) }));
+  const extracted: ExtractedDocument[] = docs.map((d) => ({ id: d.id, fileName: d.fileName, outcome: storedOutcome(d.extractionJson) }));
   const result = evaluateBatch(batch.inputJson as unknown as BatchInput, extracted, batch.today);
   await prisma.batch.update({ where: { id: batchId }, data: { resultJson: json(result), status: "ready", error: null } });
   return result;
@@ -195,5 +196,5 @@ export async function listBatches() {
 /** Stored AI readings for some documents of a batch (display only: confidence and source text). */
 export async function getDocumentReadings(batchId: string, ids: string[]): Promise<Map<string, ExtractOutcome>> {
   const rows = await prisma.document.findMany({ where: { batchId, id: { in: ids } }, select: { id: true, extractionJson: true } });
-  return new Map(rows.map((r) => [r.id, outcomeOf(r.extractionJson)]));
+  return new Map(rows.map((r) => [r.id, storedOutcome(r.extractionJson)]));
 }

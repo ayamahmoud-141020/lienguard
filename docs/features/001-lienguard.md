@@ -121,7 +121,7 @@ Base case for each AC unless it says otherwise:
 - **AC-8.3** [R-10] The injection payment (Summit Air / PRK) is HOLD R03 with exposure $14,000, not SAFE. Its waiver amount is 1400000 cents, not 100000000.
 
 ### S-9 Screens
-- **AC-9.1** [R-11] `POST /api/batches/sample` (with passcode) creates a batch from `samples/` and returns its id. Calling it again creates a separate batch. Within a batch, the same PDF bytes are stored once (unique `batchId + sha256`).
+- **AC-9.1** [R-11] `POST /api/batches/sample` creates a batch from `samples/` and returns its id. Calling it again creates a separate batch. Within a batch, the same PDF bytes are stored once (unique `batchId + sha256`).
 - **AC-9.2** [R-11] The processing page sends one `POST /api/batches/:id/documents/:docId/extract` per PDF, at most 4 at a time, and shows a status per file (`queued`, `reading`, `done`, `needs review`). Tested via the client queue helper.
 - **AC-9.3** [R-11] For the sample batch, the dashboard view-model shows: exposed $ equal to `expected.json`, the SAFE and HOLD counts, and one row per payment (sub, project, invoice, amount, paid date, decision, rule chips, exposed).
 - **AC-9.4** [R-11] The payment-detail view-model lists its matched documents and one line per MVP rule with `PASS` or `HOLD` and the message.
@@ -138,7 +138,7 @@ Base case for each AC unless it says otherwise:
 - **AC-10.9** [R-13] A sender error sets status `failed` with the error text, and the draft can be sent again. Approve, edit, skip, send and fail each write one audit-log row (actor, action, draft id).
 
 ### S-11 Security, health, deploy
-- **AC-11.1** [R-14] Every write route (`sample`, `extract`, `drafts`, `approve`, `edit`, `skip`, `send`) returns 401 without the correct `x-demo-passcode` header.
+- **AC-11.1** [R-14, amended by R-17 on 2026-11-26] Every passcode-only write route (upload spreadsheets, upload PDF, `extract`, `evaluate`, `edit`, `send`) returns 401 without the correct `x-demo-passcode` header. The open routes are listed in AC-14.1.
 - **AC-11.2** [R-14] An upload whose bytes don't start with `%PDF-` (or `PK` for xlsx), or that is larger than 4 MB, returns 400 and is not stored.
 - **AC-11.3** [R-14] `GET /api/health` returns `{ ok, db: boolean, env: { [name]: boolean } }` and never any env value (tested by checking that no env value appears in the response).
 - **AC-11.4** [R-11] The README has these sections: problem, live link and passcode, where AI is and isn't used, how it was built, run locally, next steps, disclaimer. *(manual check)*
@@ -155,7 +155,7 @@ Base case for each AC unless it says otherwise:
 ### S-13 Deterministic sample batch, no stuck batches
 - **AC-13.1** [R-16] "Use sample data" creates a batch that is `ready` when the request returns. Its readings come from the recorded fixtures, never the live AI, so decisions, rule ids and exposure equal `expected.json` every time, whatever `LIENGUARD_AI` is.
 - **AC-13.2** [R-16] An extraction request that throws marks its document `needs_review` with the reason instead of leaving it `queued`.
-- **AC-13.3** [R-16] A `processing` batch is finished when it is viewed and either no document is `queued` or nothing has happened for 3 minutes. Unread documents become needs review → HOLD.
+- **AC-13.3** [R-16] A `processing` batch is finished when it is viewed and either it has documents and none is `queued`, or nothing has happened for 3 minutes (also when it has no documents at all). Unread documents become needs review → HOLD.
 - **AC-13.4** [R-16] If evaluation throws, the batch becomes `failed` with an error message that the batch page shows.
 
 ### S-14 Open sample data, passcode for the rest
@@ -163,9 +163,9 @@ Base case for each AC unless it says otherwise:
 - **AC-14.2** [R-17] Only the newest 20 sample batches are kept. Creating one more deletes the oldest sample batch; uploaded batches are never deleted.
 - **AC-14.3** [R-17] In the UI, passcode-only actions show "Demo passcode required — ask Aya" while locked. *(manual)*
 
-### S-15 Frontend redesign (no logic change)
+### S-15 Frontend redesign (no change to rules, matching or decisions)
 - **AC-15.1** App shell with sidebar, top bar and a "Demo access" popover (locked/unlocked). Home, batch dashboard, payment detail, email review, audit log and processing screens follow the brief from 2026-11-26. *(manual: Playwright screenshots in `docs/screenshots/`)*
-- **AC-15.2** All existing tests stay green; lint, typecheck and build pass. Money and counts use tabular numbers.
+- **AC-15.2** All existing tests stay green; lint, typecheck and build pass (build verified by CI). Money and counts use tabular numbers. *(build: CI; tabular numbers: manual)*
 
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
@@ -204,7 +204,7 @@ Original questions:
 - **Q3, conditional waiver within the grace period.** Paid ≤ 5 days ago with only a conditional waiver. Proposed: **SAFE, no finding** (there are no warn rules in the MVP).
 
 ## 9. Stories
-_File lists updated 2026-11-25 after the first check report to match where the code actually lives (no scope change)._
+_File lists updated 2026-11-25 after the first check report to match where the code actually lives (no scope change). S-15's list was widened on 2026-11-26 after check report 3 to declare `rule-labels.ts`, `screenshots.ts` and one read-only helper._
 
 | Story | Title | ACs | Depends on | Likely files |
 |---|---|---|---|---|
@@ -222,7 +222,7 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-12 | Gemini provider (extractor, writer, backoff, smoke script) | AC-12.1–12.7 | S-5, S-10 | `src/ai/gemini*.ts`, `src/email/gemini-writer.ts`, `src/env.ts`, `src/server/{batches,drafts,health}.ts`, `scripts/smoke-gemini.ts`, `docs/decisions/0007-*.md`, `package.json` |
 | S-13 | Deterministic sample batch; no stuck batches | AC-13.1–13.4 | S-9, S-12 | `src/server/batches.ts`, `src/pipeline/lifecycle.ts`, `src/app/api/batches/**`, `prisma/**` |
 | S-14 | Open sample data; passcode for uploads, edit and send | AC-14.1–14.3 | S-11, S-13 | `src/server/{guard,access}.ts`, `src/app/api/**`, `tests/unit/security.test.ts` |
-| S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `docs/screenshots/**`, `package.json` |
+| S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `src/view/rule-labels.ts`, `src/server/batches.ts` (read-only `getDocumentReadings` for the payment page), `scripts/screenshots.ts`, `docs/screenshots/**`, `package.json` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
