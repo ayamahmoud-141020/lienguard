@@ -1,0 +1,36 @@
+{
+  "recordedFrom": "gemini-4-hydrogen",
+  "recordedOn": "2026-11-26",
+  "forModel": {
+    "contactName": "Sam Ortiz",
+    "subcontractor": "BlueLine Plumbing",
+    "issues": [
+      {
+        "n": 1,
+        "ruleId": "R02",
+        "project": "Lakeview Apartments",
+        "invoice": "BLP-2201",
+        "problem": "The waiver amount ({{AMOUNT_1}}) is short of the {{AMOUNT_2}} payment by {{AMOUNT_3}}.",
+        "needed": "an updated lien waiver for the full amount of {{AMOUNT_2}}"
+      },
+      {
+        "n": 2,
+        "ruleId": "R06",
+        "project": "Lakeview Apartments",
+        "invoice": "BLP-2195",
+        "problem": "This project requires a notarized lien waiver, and the one we received is not notarized.",
+        "needed": "a notarized copy of the lien waiver"
+      },
+      {
+        "n": 3,
+        "ruleId": "R12",
+        "project": "Riverside Medical Office",
+        "invoice": "BLP-2230",
+        "problem": "The lien waiver we received is hard to read; parts of it are not legible.",
+        "needed": "a clear, legible copy of the lien waiver"
+      }
+    ]
+  },
+  "subject": "Documents needed for BlueLine Plumbing invoices",
+  "bodyTemplate": "Hi Sam,\n\nWe need a few updated documents before we can release payment for the invoices below.\n\n1. Lakeview Apartments - Invoice BLP-2201: The waiver amount ({{AMOUNT_1}}) is short of the {{AMOUNT_2}} payment by {{AMOUNT_3}}. Please send an updated lien waiver for the full amount of {{AMOUNT_2}}.\n\n2. Lakeview Apartments - Invoice BLP-2195: This project requires a notarized lien waiver, and the one we received is not notarized. Please send a notarized copy of the lien waiver.\n\n3. Riverside Medical Office - Invoice BLP-2230: The lien waiver we received is hard to read, and parts of it are not legible. Please send a clear, legible copy of the lien waiver.\n\nPlease reply to this email with these documents attached.\n\nAccounts Payable"
+}

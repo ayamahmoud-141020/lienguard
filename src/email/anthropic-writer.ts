@@ -27,6 +27,8 @@ export class AnthropicEmailWriter implements EmailWriter {
   constructor(
     apiKey: string,
     private model: string,
+    /** Optional: report token usage per call (scripts use it to total the spend). */
+    private onUsage?: (usage: Anthropic.Usage) => void,
   ) {
     this.client = new Anthropic({ apiKey, maxRetries: 1, timeout: 90_000 });
   }
@@ -40,6 +42,7 @@ export class AnthropicEmailWriter implements EmailWriter {
       output_config: { effort: "low", format: zodOutputFormat(Output) },
       messages: [{ role: "user", content: text }],
     });
+    this.onUsage?.(res.usage);
     if (res.stop_reason === "refusal" || !res.parsed_output) throw new Error("the model did not return a usable draft");
     return Output.parse(res.parsed_output);
   }

@@ -1,10 +1,11 @@
-import { ChevronLeft, MailX } from "lucide-react";
+import { ChevronLeft, Info, MailX } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBatchView } from "@/server/batches";
 import { listDrafts } from "@/server/drafts";
 import { loadEnv } from "@/env";
 import { buildDashboard } from "@/view/models";
+import { emptyDraftsText, sampleDraftsNote } from "@/view/copy";
 import { BulkBar, DraftEmailsButton, EmailsWorkspace } from "@/app/_components/drafts";
 import { EmptyState, PageHeader, Panel } from "@/components/app/layout";
 
@@ -16,6 +17,7 @@ export default async function DraftsPage({ params }: { params: Promise<{ id: str
   if (!batch?.result) notFound();
   const drafts = await listDrafts(id);
   const override = loadEnv().DEMO_EMAIL_OVERRIDE;
+  const note = sampleDraftsNote(batch.kind, drafts);
   const toWrite = new Set(buildDashboard(batch.result).rows.filter((r) => r.decision === "HOLD").map((r) => r.subCode)).size;
 
   return (
@@ -32,12 +34,18 @@ export default async function DraftsPage({ params }: { params: Promise<{ id: str
       />
       {drafts.length === 0 ? (
         <Panel>
-          <EmptyState icon={<MailX aria-hidden />} title="No emails drafted yet" action={<DraftEmailsButton batchId={id} existing={0} toWrite={toWrite} />}>
-            Draft one email per subcontractor with a payment on hold. You review every one before anything is sent.
+          <EmptyState icon={<MailX aria-hidden />} title="No emails drafted for this batch yet" action={<DraftEmailsButton batchId={id} existing={0} toWrite={toWrite} />}>
+            {emptyDraftsText(batch.name)}
           </EmptyState>
         </Panel>
       ) : (
         <>
+          {note ? (
+            <p className="mb-3 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+              <Info aria-hidden className="size-3.5 shrink-0" />
+              {note}
+            </p>
+          ) : null}
           <EmailsWorkspace drafts={drafts} />
           <BulkBar drafts={drafts} />
         </>

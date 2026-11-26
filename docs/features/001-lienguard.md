@@ -49,6 +49,7 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-18** *(added 2026-11-26, Aya)* Be honest that the sample uses recorded readings, and say so where it is shown. If the free AI quota runs out, uploads say so clearly instead of failing silently.
 - **R-19** *(added 2026-11-26, Aya)* The UI is based on a permissively licensed template (shadcn/ui `dashboard-01`, MIT) instead of a custom design. Logic, tests, wording, data and passcode behaviour stay unchanged.
 - **R-20** *(added 2026-11-26, Aya)* Close the loop with automation: documents arrive by an inbound endpoint, a daily job re-checks open batches, drafts reminders and sends a digest, and every automatic event shows in an activity timeline. Emails to subcontractors still always need human approval; only notifications and the digest to the AP inbox are sent automatically.
+- **R-21** *(added 2026-11-26, Aya)* Sample batches open with their follow-up emails already drafted, using wording recorded once from live AI runs (no AI calls per click), still filled and post-checked by code. Uploaded batches keep live drafting by the button. The Emails page says when a batch has no emails yet and why.
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -153,7 +154,7 @@ Base case for each AC unless it says otherwise:
 - **AC-12.4** [R-15] A 429, a 503 or a network drop ("fetch failed") is retried with exponential backoff (up to 4 retries); other errors are not retried by backoff. At most `GEMINI_MAX_CONCURRENCY` (default 2) Gemini requests run at once per server instance.
 - **AC-12.5** [R-12, R-15] `GeminiEmailWriter` sends only the placeholder input (`forModel`) and returns `{subject, bodyTemplate}` validated by Zod. Its drafts go through the same post-check: a draft with a made-up amount is rejected.
 - **AC-12.6** [R-15] With `LIENGUARD_AI=gemini`, the app builds the Gemini extractor and writer. `/api/health` reports `GEMINI_API_KEY` as a boolean.
-- **AC-12.7** [R-15] `pnpm smoke:gemini` runs the live extractor on `samples/pdfs` and prints per-field agreement with the fixtures. *(manual, needs a key; never in CI)*
+- **AC-12.7** [R-15] `pnpm smoke:gemini` (now `pnpm smoke:ai --provider gemini`; `pnpm smoke:ai` runs whichever provider `LIENGUARD_AI` selects) runs the live extractor on `samples/pdfs` and prints per-field agreement with the fixtures. *(manual, needs a key; never in CI)*
 
 ### S-13 Deterministic sample batch, no stuck batches
 - **AC-13.1** [R-16] "Use sample data" creates a batch that is `ready` when the request returns. Its readings come from the recorded fixtures, never the live AI, so decisions, rule ids and exposure equal `expected.json` every time, whatever `LIENGUARD_AI` is.
@@ -171,7 +172,7 @@ Base case for each AC unless it says otherwise:
 - **AC-15.2** All existing tests stay green; lint, typecheck and build pass (build verified by CI). Money and counts use tabular numbers. *(build: CI; tabular numbers: manual)*
 
 ### S-16 Honest sample note; clear AI-quota message
-- **AC-16.1** [R-18] The sample batch page and the README show the same note: hand-checked readings, a live Gemini run matched 105 of 106 fields, upload your own PDFs for live extraction. Both use one shared sentence.
+- **AC-16.1** [R-18] The sample batch page and the README show the same note: hand-checked readings, live runs of Claude (claude-opus-5-5) and Gemini each matched 105 of 106 fields (*amended 2026-11-26 by R-21: Claude smoke run added*), upload your own PDFs for live extraction. Both use one shared sentence.
 - **AC-16.2** [R-18] When the AI provider returns 429 after backoff, the reading is `ok: false` with `code: "quota"`, and the document goes to needs review (HOLD, never a silent pass).
 - **AC-16.3** [R-18] The extract response then carries the notice "AI quota reached, try later". The processing screen shows it, and so does the dashboard of a batch with any quota-failed document.
 
@@ -196,6 +197,12 @@ Base case for each AC unless it says otherwise:
 ### S-20 Activity timeline and the automated loop in docs
 - **AC-20.1** [R-20] The batch page shows an activity timeline: document received, rules re-run, status changed, reminder drafted, notification and digest sent, with time and source ("Automation" or the person's name). The sentence and source for each event come from a pure, tested function; the page layout is checked by hand (screenshot 18).
 - **AC-20.2** [R-20] README and the home "How it works" strip show the automated loop: document arrives → AI reads → rules re-check → status changes → notify or draft reminder → human approves. *(manual)*
+
+### S-21 Sample emails ready at once; clearer empty Emails page
+- **AC-21.1** [R-21] Creating a sample batch also creates one follow-up draft per subcontractor on hold (6 on the samples), status `draft`, source `ai`, with zero AI calls. The wording is replayed from `samples/drafts/*.json`, recorded from live AI runs (Gemini and Claude) by `pnpm record:drafts`; each recording names the model that wrote it and holds placeholders, never amounts or dates. The filled drafts pass the email post-check.
+- **AC-21.2** [R-21] A recording is used only for the exact writer input it was recorded for; otherwise, or if the filled text fails the post-check, the code template is used (as for a live draft). Uploaded batches are created without drafts and "Draft follow-up emails" still uses the live writer.
+- **AC-21.3** [R-21] On a sample batch whose follow-ups all came from the recording, the Emails page shows "Sample emails were recorded from live AI runs (Gemini and Claude)." The providers it names are exactly those in the recordings. It does not show on uploaded batches or for template or reminder drafts.
+- **AC-21.4** [R-21] An Emails page with no drafts names the batch, says each batch has its own emails, and points to earlier batches under Batches, next to the "Draft follow-up emails" button.
 
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
@@ -258,6 +265,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-18 | Inbound documents | AC-18.1–18.4 | S-13, S-17 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/inbound/**`, `src/app/api/batches/[id]/simulate-reply/**`, `scripts/{generate-samples,sample-scenarios}.ts`, `samples/inbound/**`, `src/pipeline/samples.ts`, `src/ai/fixture-extractor.ts`, `prisma/**`, `src/env.ts`, `src/server/access.ts`, `src/server/guard.ts` (`hasPasscode`), `src/server/batches.ts` (exports `SAMPLES_DIR`, `dbCache`), `src/domain/dates.ts` (`addDays`, pure) |
 | S-19 | Daily automation | AC-19.1–19.4 | S-18 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/cron/**`, `src/app/api/batches/[id]/daily-check/**`, `vercel.json`, `src/email/**`, `src/server/drafts.ts` (follow-up vs reminder kind, `sentOn` on send, ordering), `src/app/_components/drafts.tsx` (reminder labels) |
 | S-20 | Activity timeline; loop in docs | AC-20.1–20.2 | S-18, S-19 | `src/app/batches/[id]/page.tsx`, `src/components/app/{activity,how-it-works}.tsx`, `src/view/activity.ts`, `src/app/_components/automation.tsx`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**` |
+| S-21 | Sample emails ready at once; clearer empty Emails page | AC-21.1–21.4 | S-19, S-20 | `src/email/recorded-writer.ts`, `src/server/batches.ts` (`BatchStore.drafts`, drafts in `createSampleBatch`), `src/view/copy.ts`, `src/app/batches/[id]/drafts/page.tsx`, `scripts/record-sample-drafts.ts`, `scripts/smoke-ai.ts` (renamed from `smoke-gemini.ts`, adds Claude, on-disk reading cache), `scripts/lib/spend.ts`, `src/email/anthropic-writer.ts` (optional usage hook), `samples/drafts/**`, `package.json`, `.gitignore` (`.cache/`), `README.md`, `docs/decisions/0009-claude-in-production.md`, `tests/unit/memory-batch-store.ts`, `tests/unit/honesty-quota.test.ts` (AC-16.1 note now names Claude) |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -278,10 +286,11 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-14 | Open sample data | S-11, S-13 | merged |
 | S-15 | Frontend redesign | S-13, S-14 | merged |
 | S-16 | Honest sample note; AI-quota message | S-12, S-15 | merged |
-| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | awaiting-merge |
-| S-18 | Inbound documents | S-13, S-17 | awaiting-merge |
-| S-19 | Daily automation | S-18 | awaiting-merge |
-| S-20 | Activity timeline; loop in docs | S-18, S-19 | awaiting-merge |
+| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | merged |
+| S-18 | Inbound documents | S-13, S-17 | merged |
+| S-19 | Daily automation | S-18 | merged |
+| S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
+| S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | awaiting-merge |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

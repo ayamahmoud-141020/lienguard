@@ -17,7 +17,9 @@
     "test:unit": "vitest run tests/unit",
     "test:e2e": "vitest run tests/e2e",
     "samples": "tsx scripts/generate-samples.ts",
-    "smoke:gemini": "tsx scripts/smoke-gemini.ts",
+    "smoke:ai": "tsx scripts/smoke-ai.ts",
+    "smoke:gemini": "tsx scripts/smoke-ai.ts --provider gemini",
+    "record:drafts": "tsx scripts/record-sample-drafts.ts",
     "screenshots": "tsx scripts/screenshots.ts",
     "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },

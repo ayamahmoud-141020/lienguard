@@ -1,0 +1,36 @@
+{
+  "recordedFrom": "claude-opus-5-5",
+  "recordedOn": "2026-11-26",
+  "forModel": {
+    "contactName": "Marco Bell",
+    "subcontractor": "Granite Drywall & Paint",
+    "issues": [
+      {
+        "n": 1,
+        "ruleId": "R01",
+        "project": "Riverside Medical Office",
+        "invoice": "GDP-4401",
+        "problem": "We have no lien waiver on file for this {{AMOUNT_1}} payment.",
+        "needed": "a signed unconditional progress lien waiver for {{AMOUNT_1}} through {{DATE_1}}"
+      },
+      {
+        "n": 2,
+        "ruleId": "R02",
+        "project": "Parkway Retail Center",
+        "invoice": "GDP-4420",
+        "problem": "The waiver amount ({{AMOUNT_2}}) is short of the {{AMOUNT_3}} payment by {{AMOUNT_4}}.",
+        "needed": "an updated lien waiver for the full amount of {{AMOUNT_3}}"
+      },
+      {
+        "n": 3,
+        "ruleId": "R04",
+        "project": "Parkway Retail Center",
+        "invoice": "GDP-4420",
+        "problem": "The waiver runs through {{DATE_2}}, but this payment covers work through {{DATE_1}}.",
+        "needed": "a lien waiver with a through date of {{DATE_1}}"
+      }
+    ]
+  },
+  "subject": "Lien waivers needed to release payments - Granite Drywall & Paint",
+  "bodyTemplate": "Hi Marco,\n\nWe're getting your payments ready, and a few lien waiver items need your attention before we can release them.\n\n1. Riverside Medical Office, Invoice GDP-4401: We have no lien waiver on file for this {{AMOUNT_1}} payment. Please send a signed unconditional progress lien waiver for {{AMOUNT_1}} through {{DATE_1}}.\n\n2. Parkway Retail Center, Invoice GDP-4420: The waiver amount ({{AMOUNT_2}}) is short of the {{AMOUNT_3}} payment by {{AMOUNT_4}}. Please send an updated lien waiver for the full amount of {{AMOUNT_3}}.\n\n3. Parkway Retail Center, Invoice GDP-4420: The waiver runs through {{DATE_2}}, but this payment covers work through {{DATE_1}}. Please send a lien waiver with a through date of {{DATE_1}}.\n\nPlease reply to this email with the documents attached, and we'll keep your payments moving. Thank you for your help!\n\nBest regards,\nAccounts Payable"
+}

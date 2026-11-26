@@ -4,7 +4,7 @@ Before a general contractor pays a subcontractor, someone has to check that the 
 
 LienGuard takes the payments spreadsheet and the PDFs that arrived. For every payment it says **SAFE** or **HOLD**, explains why with rule ids, and shows the dollars at risk. It then drafts one follow-up email per subcontractor, and **a person approves each email before it is sent**.
 
-> **Live demo: https://lienguard-one.vercel.app**. Click **Use sample data**; no passcode is needed. Sample data uses hand-checked readings, so results are the same every time. A live Gemini run matched them on 105 of 106 fields. Upload your own PDFs to see live extraction. Uploading your own files, editing drafts and sending emails need the demo passcode, which is shared privately (Demo access, top right). Demo emails are redirected to one inbox.
+> **Live demo: https://lienguard-one.vercel.app**. Click **Use sample data**; no passcode is needed. Sample data uses hand-checked readings, so results are the same every time. Live runs of Claude (claude-opus-5-5) and Gemini each matched them on 105 of 106 fields. Upload your own PDFs to see live extraction. Uploading your own files, editing drafts and sending emails need the demo passcode, which is shared privately (Demo access, top right). Demo emails are redirected to one inbox.
 >
 > Screenshots of every screen are in [`docs/screenshots/`](docs/screenshots/).
 
@@ -66,13 +66,15 @@ document arrives → AI reads it → rules re-check → status changes → notif
 
 ## Live results (2026-11-26)
 
-The deployed app reads the sample PDFs with **Gemini** (`gemini-3.5-flash-lite`, free tier):
+The deployed app reads uploaded PDFs with **Claude** (`claude-opus-5-5`, low effort). On the 17 sample PDFs (`pnpm smoke:ai`):
 
-- **105 / 106 fields** match the hand-checked fixtures. The one "miss" is the blurry scan's amount, which the model read as `$11,0`. Code can't parse that, so the document goes to review, which is the intended outcome.
-- **17 / 17** documents get the right needs-review flag. **12 / 12** payments get the same decision, rule ids and exposure as `expected.json`, and batch exposure is exactly **$162,500**. A full run takes about 50 seconds.
-- The prompt-injection waiver was read honestly. The model's note: "The document contains embedded instructions attempting to override waiver type, amount, and notarization status."
-- All 6 email drafts passed the post-check on the first try. One was approved and sent through Resend.
-- Free-tier lesson: `gemini-4-hydrogen` allows only 20 requests a day per model, and other models sometimes return 503 under load. Readings are cached by file hash, so "Use sample data" makes **no** AI calls once the samples have been read, and a failed read becomes needs review → HOLD, never a silent pass. Check it yourself with `pnpm smoke:gemini --batch <id>`.
+- **105 / 106 fields** match the hand-checked fixtures. The one miss is the blurry scan's amount, which Claude returned as empty instead of guessing. The document goes to review, which is the intended outcome.
+- **17 / 17** documents get the right needs-review flag. The prompt-injection waiver was read honestly as a $14,000 conditional waiver.
+- Cost: about **$0.58** for all 17 PDFs (about 3.4 cents per document). Readings are cached by file hash, so a PDF is never paid for twice.
+
+An earlier run with **Gemini** (`gemini-3.5-flash-lite`, free tier) also matched **105 / 106 fields**: it read the blurry amount as `$11,0`, which code can't parse, so that document went to review too. **12 / 12** payments got the same decision, rule ids and exposure as `expected.json` (batch exposure exactly **$162,500**), and all 6 email drafts passed the post-check on the first try. Free-tier lesson: the daily quota ran out during development and some models returned 503 under load, which is why the app now runs on Claude. A failed read always becomes needs review → HOLD, never a silent pass.
+
+**Sample emails:** a sample batch opens with its 6 follow-up emails already drafted. Their wording was recorded once from live AI runs (3 by Gemini, 3 by `claude-opus-5-5`; each file in [`samples/drafts/`](samples/drafts/) names its model). Code still fills in every amount and date and runs the post-check, and "Use sample data" makes no AI calls. Your own uploaded batches draft live with the button.
 
 ## How it was built
 
@@ -95,9 +97,10 @@ pnpm install
 cp .env.example .env.local      # fill in DATABASE_URL, DIRECT_URL, keys, DEMO_PASSCODE
 pnpm prisma migrate deploy      # needs DATABASE_URL / DIRECT_URL in the shell env (Prisma reads .env, not .env.local)
 pnpm dev                        # http://localhost:3000 → "Use sample data"
-pnpm test                       # 85 tests, no network
+pnpm test                       # 123 tests, no network
 pnpm samples                    # regenerate the fictional sample batch
-pnpm smoke:gemini               # live: Gemini reads the sample PDFs, compared with fixtures
+pnpm smoke:ai                   # live: the AI (LIENGUARD_AI) reads the sample PDFs, compared with fixtures (cached)
+pnpm record:drafts              # live: record the sample batch's email wording (only missing ones)
 ```
 
 Set `LIENGUARD_AI=fixture` and `LIENGUARD_EMAIL=fake` to run the full app with no API keys. Sample PDFs are then "read" from recorded fixtures and emails are only recorded.

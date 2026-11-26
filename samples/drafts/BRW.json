@@ -1,0 +1,20 @@
+{
+  "recordedFrom": "gemini-4-hydrogen",
+  "recordedOn": "2026-11-26",
+  "forModel": {
+    "contactName": "Priya Nair",
+    "subcontractor": "Brightway Electric",
+    "issues": [
+      {
+        "n": 1,
+        "ruleId": "R03",
+        "project": "Parkway Retail Center",
+        "invoice": "BWE-3301",
+        "problem": "The {{AMOUNT_1}} payment was made on {{DATE_1}}, but we only have a conditional waiver.",
+        "needed": "an unconditional progress lien waiver for {{AMOUNT_1}} through {{DATE_2}}"
+      }
+    ]
+  },
+  "subject": "Document needed for Brightway Electric - Parkway Retail Center (Invoice BWE-3301)",
+  "bodyTemplate": "Hi Priya Nair,\n\nCould you please send the following document for Brightway Electric so we can keep our payment records complete?\n\n1. Parkway Retail Center, Invoice BWE-3301: The {{AMOUNT_1}} payment was made on {{DATE_1}}, but we only have a conditional waiver. Please send an unconditional progress lien waiver for {{AMOUNT_1}} through {{DATE_2}}.\n\nPlease reply to this email with the document attached.\n\nAccounts Payable"
+}

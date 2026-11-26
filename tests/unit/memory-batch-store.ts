@@ -1,5 +1,6 @@
 import type { BatchStore, StoredDocument } from "@/server/batches";
 import type { BatchInput, BatchResult } from "@/pipeline/evaluate";
+import { MemoryDraftStore } from "@/email/workflow";
 
 type MemBatch = { id: string; name: string; today: string; kind: string; input: BatchInput; status: string; result?: BatchResult; createdAt: Date };
 
@@ -7,6 +8,7 @@ type MemBatch = { id: string; name: string; today: string; kind: string; input: 
 export class MemoryBatchStore implements BatchStore {
   batches: MemBatch[] = [];
   documents = new Map<string, StoredDocument & { id: string; batchId: string }>();
+  drafts = new MemoryDraftStore();
   private seq = 0;
 
   async countBatches(kind: string) {

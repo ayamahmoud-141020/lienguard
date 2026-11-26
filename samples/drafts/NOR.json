@@ -1,0 +1,28 @@
+{
+  "recordedFrom": "claude-opus-5-5",
+  "recordedOn": "2026-11-26",
+  "forModel": {
+    "contactName": "Leah Kim",
+    "subcontractor": "Northstar Fire Protection",
+    "issues": [
+      {
+        "n": 1,
+        "ruleId": "R07",
+        "project": "Lakeview Apartments",
+        "invoice": "NFP-5501",
+        "problem": "This {{AMOUNT_1}} payment is the final payment, but we received a progress waiver.",
+        "needed": "a final lien waiver for this project"
+      },
+      {
+        "n": 2,
+        "ruleId": "R05",
+        "project": "Parkway Retail Center",
+        "invoice": "NFP-5520",
+        "problem": "The lien waiver we received is not signed.",
+        "needed": "a signed copy of the lien waiver"
+      }
+    ]
+  },
+  "subject": "Documents needed to release payment – Northstar Fire Protection (NFP-5501, NFP-5520)",
+  "bodyTemplate": "Hi Leah,\n\nWe're getting your payments ready, and we need a couple of documents before we can release them.\n\n1. Lakeview Apartments – Invoice NFP-5501: This {{AMOUNT_1}} payment is the final payment, but we received a progress waiver. Please send a final lien waiver for this project.\n\n2. Parkway Retail Center – Invoice NFP-5520: The lien waiver we received is not signed. Please send a signed copy of the lien waiver.\n\nPlease reply to this email with the documents attached. Thank you for your help.\n\nBest regards,\nAccounts Payable"
+}

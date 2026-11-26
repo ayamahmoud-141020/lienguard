@@ -1,0 +1,20 @@
+{
+  "recordedFrom": "gemini-4-hydrogen",
+  "recordedOn": "2026-11-26",
+  "forModel": {
+    "contactName": "Owen Price",
+    "subcontractor": "Copperleaf Roofing",
+    "issues": [
+      {
+        "n": 1,
+        "ruleId": "R09",
+        "project": "Parkway Retail Center",
+        "invoice": "CLR-6601",
+        "problem": "The general liability insurance certificate we have on file expired on {{DATE_1}}.",
+        "needed": "a current certificate of insurance (general liability) naming us as certificate holder"
+      }
+    ]
+  },
+  "subject": "Copperleaf Roofing - Document Needed for Parkway Retail Center (Invoice CLR-6601)",
+  "bodyTemplate": "Hi Owen,\n\nWe need an updated document before we can release payment for the invoice below.\n\n1. Parkway Retail Center (Invoice CLR-6601): The general liability insurance certificate we have on file expired on {{DATE_1}}. Please send a current certificate of insurance (general liability) naming us as certificate holder.\n\nPlease reply to this email with the document attached.\n\nAccounts Payable"
+}
