@@ -5,8 +5,8 @@ import { requirePasscode } from "./guard";
  * Open: trying the fixed, fictional sample data (hand-checked readings, no AI cost for reading).
  * Passcode: anything that reads your own files with live AI, changes email text, or sends email.
  */
-export const PUBLIC_ACTIONS = ["batch.sample", "drafts.generate", "draft.approve", "draft.skip"] as const;
-export const PASSCODE_ACTIONS = ["batch.upload", "document.upload", "document.extract", "batch.evaluate", "draft.edit", "draft.send"] as const;
+export const PUBLIC_ACTIONS = ["batch.sample", "batch.simulate_reply", "drafts.generate", "draft.approve", "draft.skip"] as const;
+export const PASSCODE_ACTIONS = ["batch.upload", "document.upload", "document.extract", "batch.evaluate", "batch.daily_check", "draft.edit", "draft.send"] as const;
 
 export type Action = (typeof PUBLIC_ACTIONS)[number] | (typeof PASSCODE_ACTIONS)[number];
 

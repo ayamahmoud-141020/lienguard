@@ -33,6 +33,10 @@ describe("S-11 security", () => {
       "src/app/api/batches/[id]/evaluate/route.ts": /guard\(req, "batch\.evaluate"\)/,
       "src/app/api/batches/[id]/drafts/route.ts": /guard\(req, "drafts\.generate"\)/,
       "src/app/api/drafts/[draftId]/[action]/route.ts": /guard\(req, draftAction\(action\)\)/,
+      "src/app/api/batches/[id]/simulate-reply/route.ts": /guard\(req, "batch\.simulate_reply"\)/,
+      "src/app/api/batches/[id]/daily-check/route.ts": /guard\(req, "batch\.daily_check"\)/,
+      // Machine-to-machine: its own secret instead of the demo passcode (AC-18.1).
+      "src/app/api/inbound/route.ts": /requireInboundSecret\(req\)/,
     };
     const posts = routeFiles("src/app/api").filter((f) => /export async function POST/.test(readFileSync(f, "utf8")));
     expect(posts.sort()).toEqual(Object.keys(declared).sort());
@@ -45,8 +49,8 @@ describe("S-11 security", () => {
 
   it("AC-14.1 sample, generate drafts, approve and skip are open; uploads, extract, evaluate, edit and send need the passcode", () => {
     const env = { DEMO_PASSCODE: "harbor-42", NODE_ENV: "production" };
-    expect([...PUBLIC_ACTIONS].sort()).toEqual(["batch.sample", "draft.approve", "draft.skip", "drafts.generate"]);
-    expect([...PASSCODE_ACTIONS].sort()).toEqual(["batch.evaluate", "batch.upload", "document.extract", "document.upload", "draft.edit", "draft.send"]);
+    expect([...PUBLIC_ACTIONS].sort()).toEqual(["batch.sample", "batch.simulate_reply", "draft.approve", "draft.skip", "drafts.generate"]);
+    expect([...PASSCODE_ACTIONS].sort()).toEqual(["batch.daily_check", "batch.evaluate", "batch.upload", "document.extract", "document.upload", "draft.edit", "draft.send"]);
     for (const a of PUBLIC_ACTIONS) expect(guard(req(), a, env), a).toBeNull();
     for (const a of PASSCODE_ACTIONS) {
       expect(guard(req(), a, env)?.status, a).toBe(401);

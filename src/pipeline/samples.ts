@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { FixtureExtractor } from "@/ai/fixture-extractor";
 import { sha256 } from "@/ai/hash";
@@ -25,12 +25,26 @@ export function loadSampleBatch(dir: string): BatchInput & { documents: InputDoc
 }
 
 /** Fixture extractor keyed by the SHA-256 of each sample PDF. */
-export function loadFixtureExtractor(dir: string): FixtureExtractor {
-  const map = new Map<string, ExtractionT>();
+function readFixtures(dir: string, map: Map<string, ExtractionT>): void {
+  if (!existsSync(join(dir, "fixtures"))) return;
   for (const f of readdirSync(join(dir, "fixtures"))) {
     if (!f.endsWith(".json")) continue;
     const pdf = readFileSync(join(dir, "pdfs", f.replace(/\.json$/, ".pdf")));
     map.set(sha256(pdf), Extraction.parse(JSON.parse(readFileSync(join(dir, "fixtures", f), "utf8"))));
   }
+}
+
+/** Recorded readings for the sample batch's PDFs. */
+export function loadFixtureExtractor(dir: string): FixtureExtractor {
+  const map = new Map<string, ExtractionT>();
+  readFixtures(dir, map);
+  return new FixtureExtractor(map);
+}
+
+/** Recorded readings for the sample PDFs plus the documents that arrive later (samples/inbound). */
+export function loadRecordedReadings(dir: string): FixtureExtractor {
+  const map = new Map<string, ExtractionT>();
+  readFixtures(dir, map);
+  readFixtures(join(dir, "inbound"), map);
   return new FixtureExtractor(map);
 }

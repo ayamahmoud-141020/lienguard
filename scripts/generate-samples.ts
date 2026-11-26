@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import * as XLSX from "xlsx";
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
-import { COIS, DEMO_TODAY, GC, INJECTION_TEXT, PAYMENTS, PROJECTS, SUBS, WAIVERS, type CoiDoc, type WaiverDoc } from "./sample-scenarios";
+import { COIS, DEMO_TODAY, GC, INJECTION_TEXT, PAYMENTS, PROJECTS, SUBS, WAIVERS, INBOUND_WAIVERS, type CoiDoc, type WaiverDoc } from "./sample-scenarios";
 import type { ExtractionT } from "../src/ai/schemas";
 
 type Fonts = { regular: PDFFont; bold: PDFFont; serif: PDFFont; serifBold: PDFFont; mono: PDFFont; italic: PDFFont };
@@ -380,6 +380,13 @@ export async function generateSamples(outDir: string): Promise<void> {
     }, `Lien waiver ${w.file}`);
     writeFileSync(join(outDir, "pdfs", `${w.file}.pdf`), bytes);
     writeFileSync(join(outDir, "fixtures", `${w.file}.json`), JSON.stringify(waiverFixture(w), null, 2) + "\n");
+  }
+  mkdirSync(join(outDir, "inbound", "pdfs"), { recursive: true });
+  mkdirSync(join(outDir, "inbound", "fixtures"), { recursive: true });
+  for (const w of INBOUND_WAIVERS) {
+    const bytes = await makePdf((page, f) => drawTxStyle(page, f, w), `Lien waiver ${w.file}`);
+    writeFileSync(join(outDir, "inbound", "pdfs", `${w.file}.pdf`), bytes);
+    writeFileSync(join(outDir, "inbound", "fixtures", `${w.file}.json`), JSON.stringify(waiverFixture(w), null, 2) + "\n");
   }
   for (const c of COIS) {
     const bytes = await makePdf((page, f) => drawCoi(page, f, c), `Certificate of insurance ${c.file}`);

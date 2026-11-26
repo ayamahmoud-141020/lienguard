@@ -41,6 +41,11 @@ function toDayNumber(d: IsoDate): number {
   return Date.UTC(y, m - 1, day) / 86_400_000;
 }
 
+/** The ISO date n days after d (n may be negative). Pure: no clock. */
+export function addDays(d: IsoDate, n: number): IsoDate {
+  return new Date((toDayNumber(d) + n) * 86_400_000).toISOString().slice(0, 10) as IsoDate;
+}
+
 /** Whole days from a to b (positive when b is later). */
 export function daysBetween(a: IsoDate, b: IsoDate): number {
   return toDayNumber(b) - toDayNumber(a);

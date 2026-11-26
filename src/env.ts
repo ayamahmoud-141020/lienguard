@@ -10,6 +10,10 @@ const Base = z.object({
   GEMINI_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("LienGuard Demo <onboarding@resend.dev>"),
+  INBOUND_SECRET: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
+  /** The GC's accounts-payable inbox for notifications and the digest. Defaults to DEMO_EMAIL_OVERRIDE. */
+  AP_INBOX: z.string().email().optional().or(z.literal("").transform(() => undefined)),
   DEMO_EMAIL_OVERRIDE: z.string().email().optional().or(z.literal("").transform(() => undefined)),
   DEMO_PASSCODE: z.string().optional(),
   DEMO_TODAY: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default("2026-11-20"),

@@ -48,6 +48,7 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-17** *(added 2026-11-26, Aya; amends R-14)* Reviewers can try the sample batch without a passcode. The passcode stays on: uploading own files (and reading them), editing drafts, sending emails.
 - **R-18** *(added 2026-11-26, Aya)* Be honest that the sample uses recorded readings, and say so where it is shown. If the free AI quota runs out, uploads say so clearly instead of failing silently.
 - **R-19** *(added 2026-11-26, Aya)* The UI is based on a permissively licensed template (shadcn/ui `dashboard-01`, MIT) instead of a custom design. Logic, tests, wording, data and passcode behaviour stay unchanged.
+- **R-20** *(added 2026-11-26, Aya)* Close the loop with automation: documents arrive by an inbound endpoint, a daily job re-checks open batches, drafts reminders and sends a digest, and every automatic event shows in an activity timeline. Emails to subcontractors still always need human approval; only notifications and the digest to the AP inbox are sent automatically.
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -161,7 +162,7 @@ Base case for each AC unless it says otherwise:
 - **AC-13.4** [R-16] If evaluation throws, the batch becomes `failed` with an error message that the batch page shows.
 
 ### S-14 Open sample data, passcode for the rest
-- **AC-14.1** [R-17] Without the passcode these POST routes work: sample batch, generate drafts, approve, skip. These return 401 without it: upload spreadsheets, upload PDF, extract, evaluate, edit draft, send. Every POST route is in exactly one of the two lists.
+- **AC-14.1** [R-17, extended by R-20] Without the passcode these POST routes work: sample batch, simulate a subcontractor reply, generate drafts, approve, skip. These return 401 without it: upload spreadsheets, upload PDF, extract, evaluate, run daily check, edit draft, send. Every POST route is in exactly one of the two lists, except `/api/inbound`, which uses its own secret (AC-18.1).
 - **AC-14.2** [R-17] Only the newest 20 sample batches are kept. Creating one more deletes the oldest sample batch; uploaded batches are never deleted.
 - **AC-14.3** [R-17] In the UI, passcode-only actions show "Demo passcode required — ask Aya" while locked. *(manual)*
 
@@ -179,6 +180,22 @@ Base case for each AC unless it says otherwise:
 - **AC-17.2** [R-19] Emails are master–detail: subcontractor list on the left, the rendered email on the right, with code-filled amounts and dates highlighted. "Edit" switches to the textarea. *(manual)*
 - **AC-17.3** [R-19] The chart data come from a pure function of the batch result: holds per rule id and the SAFE/HOLD counts, which match `expected.json` for the sample. The preview highlights exactly the amounts and dates that code filled in.
 - **AC-17.4** [R-19] All existing tests stay green, and lint, typecheck and build pass. Passcode behaviour is unchanged (AC-14.1 tests). The template's licence is recorded in `docs/decisions/0008-ui-template.md`.
+
+### S-18 Inbound documents
+- **AC-18.1** [R-20] `POST /api/inbound` needs the `x-inbound-secret` header equal to `INBOUND_SECRET`; otherwise it returns 401 and stores nothing. It accepts a batch id and one PDF (same upload checks as AC-11.2).
+- **AC-18.2** [R-20] Receiving a document stores it (dated with the batch's day), reads it (recorded reading if one exists, otherwise the live extractor), re-runs matching and rules, and records what changed: one activity event per payment whose decision changed.
+- **AC-18.3** [R-20] When a payment flips HOLD → SAFE, a notification "<Sub> is now safe to pay: <invoice>, <amount>" goes to the AP inbox (idempotent per batch, payment and flip). The sample corrected waiver flips PAY-02 (BlueLine, BLP-2201, $20,000.00) from HOLD to SAFE.
+- **AC-18.4** [R-20] "Simulate a subcontractor reply" on a sample batch receives the corrected waiver through the same code path without a passcode. The AP email is sent only when demo access is unlocked; otherwise the timeline records it as not sent.
+
+### S-19 Daily automation
+- **AC-19.1** [R-20] `GET /api/cron/daily` needs `Authorization: Bearer <CRON_SECRET>` (Vercel Cron); otherwise 401. It runs the daily check for every ready batch with the real date as `today` (never moving a batch's date backwards). "Run daily check now" (passcode) runs it for one batch, moving its demo date forward one day.
+- **AC-19.2** [R-20] The daily check re-runs the rules with the new `today`: a COI that has expired becomes R09 HOLD, and a conditional waiver past the grace period becomes R03 HOLD. Decision changes are recorded as activity events.
+- **AC-19.3** [R-20] For each subcontractor whose follow-up email was sent at least 3 days earlier (batch days) and who sent no new document since, one reminder draft is created (status `draft`, needs approval, never sent automatically). It passes the email post-check.
+- **AC-19.4** [R-20] One digest email per run goes to the AP inbox: new holds, cleared holds, exposed $ and drafts waiting for approval. Its numbers are built from the data and checked against it before sending (a post-check).
+
+### S-20 Activity timeline and the automated loop in docs
+- **AC-20.1** [R-20] The batch page shows an activity timeline: document received, rules re-run, status changed, reminder drafted, notification and digest sent, with time and source ("Automation" or the person's name).
+- **AC-20.2** [R-20] README and the home "How it works" strip show the automated loop: document arrives → AI reads → rules re-check → status changes → notify or draft reminder → human approves. *(manual)*
 
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
@@ -238,6 +255,9 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `src/view/rule-labels.ts`, `src/server/batches.ts` (read-only `getDocumentReadings` for the payment page), `scripts/screenshots.ts`, `docs/screenshots/**`, `package.json` |
 | S-16 | Honest sample note; AI-quota message | AC-16.1–16.3 | S-12, S-15 | `src/view/copy.ts`, `src/ai/{extractor,gemini-extractor}.ts`, `src/server/batches.ts`, `src/app/api/batches/[id]/documents/[docId]/extract/route.ts`, `src/app/_components/processing.tsx`, `src/app/batches/[id]/page.tsx`, `README.md` |
 | S-17 | UI on shadcn/ui dashboard-01 | AC-17.1–17.4 | S-15, S-16 | `src/components/**`, `src/app/**`, `src/lib/utils.ts`, `src/hooks/**`, `src/view/{charts,highlight}.ts`, `components.json`, `package.json`, `scripts/screenshots.ts`, `docs/screenshots/**`, `docs/decisions/0008-ui-template.md` |
+| S-18 | Inbound documents | AC-18.1–18.4 | S-13, S-17 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/inbound/**`, `src/app/api/batches/[id]/simulate-reply/**`, `scripts/{generate-samples,sample-scenarios}.ts`, `samples/inbound/**`, `src/pipeline/samples.ts`, `src/ai/fixture-extractor.ts`, `prisma/**`, `src/env.ts`, `src/server/access.ts` |
+| S-19 | Daily automation | AC-19.1–19.4 | S-18 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/cron/**`, `src/app/api/batches/[id]/daily-check/**`, `vercel.json`, `src/email/**` |
+| S-20 | Activity timeline; loop in docs | AC-20.1–20.2 | S-18, S-19 | `src/app/batches/[id]/page.tsx`, `src/components/app/{activity,how-it-works}.tsx`, `src/app/_components/automation.tsx`, `README.md` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -259,6 +279,9 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-15 | Frontend redesign | S-13, S-14 | merged |
 | S-16 | Honest sample note; AI-quota message | S-12, S-15 | merged |
 | S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | checking |
+| S-18 | Inbound documents | S-13, S-17 | coding |
+| S-19 | Daily automation | S-18 | coding |
+| S-20 | Activity timeline; loop in docs | S-18, S-19 | coding |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

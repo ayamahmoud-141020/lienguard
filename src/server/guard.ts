@@ -28,3 +28,8 @@ export function actorFrom(req: Request): string {
   const clean = raw.replace(/[^\p{L}\p{N} .'-]/gu, "").trim().slice(0, 60);
   return clean || "demo user";
 }
+
+/** True when the request carries the right demo passcode. For optional extras (e.g. sending a demo email), not for access control. */
+export function hasPasscode(req: Request, env: { DEMO_PASSCODE?: string; NODE_ENV?: string } = process.env): boolean {
+  return Boolean(env.DEMO_PASSCODE) && requirePasscode(req, env) === null;
+}
