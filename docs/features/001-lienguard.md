@@ -195,7 +195,7 @@ Base case for each AC unless it says otherwise:
 - **AC-19.4** [R-20] One digest email per run goes to the AP inbox: new holds, cleared holds, exposed $ and drafts waiting for approval. Its numbers are built from the data and checked against it before sending (a post-check).
 
 ### S-20 Activity timeline and the automated loop in docs
-- **AC-20.1** [R-20] The batch page shows an activity timeline: document received, rules re-run, status changed, reminder drafted, notification and digest sent, with time and source ("Automation" or the person's name). The sentence and source for each event come from a pure, tested function; the page layout is checked by hand (screenshot 18).
+- **AC-20.1** [R-20] The batch page shows an activity timeline: document received, rules re-run, status changed, reminder drafted, notification and digest sent, with time and source ("Automation" or the person's name). The sentence and source for each event come from a pure, tested function; the page layout is checked by hand (screenshot 18, now `docs/screenshots/archive/18-automation-activity.png`).
 - **AC-20.2** [R-20] README and the home "How it works" strip show the automated loop: document arrives → AI reads → rules re-check → status changes → notify or draft reminder → human approves. *(manual)*
 
 ### S-21 Sample emails ready at once; clearer empty Emails page
@@ -312,4 +312,4 @@ After check round `docs/checks/2026-11-26-check-6.md` (all automated checks pass
 
 ### Sign-off for S-18 to S-20 (2026-11-26, Aya, in chat)
 After check round `docs/checks/2026-11-26-check-8.md` (every automated AC valid; the idempotency-key and 4 MB-cap assertions were then added), Aya accepted:
-- **AC-20.2**: manual. The automated loop is shown in the README and the home "How it works" strip (screenshot 13).
+- **AC-20.2**: manual. The automated loop is shown in the README and the home "How it works" strip (screenshot 13, now `docs/screenshots/archive/13-home.png`).

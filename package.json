@@ -20,6 +20,7 @@
     "smoke:ai": "tsx scripts/smoke-ai.ts",
     "smoke:gemini": "tsx scripts/smoke-ai.ts --provider gemini",
     "record:drafts": "tsx scripts/record-sample-drafts.ts",
+    "live:check": "tsx scripts/live-upload-check.ts",
     "screenshots": "tsx scripts/screenshots.ts",
     "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
