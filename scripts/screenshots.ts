@@ -109,6 +109,12 @@ async function main() {
   await p2.screenshot({ path: join(OUT, "16-keyboard-focus.png") });
   console.log("saved 16-keyboard-focus");
 
+  // A deleted batch in a dark-mode browser: the app's own not-found page, logo still visible.
+  const dark = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: "dark" });
+  const p3 = await dark.newPage();
+  await p3.goto(`${BASE}/batches/deleted-batch-id/audit`);
+  await shot(p3, "17-not-found-dark-mode", false);
+
   await browser.close();
 }
 

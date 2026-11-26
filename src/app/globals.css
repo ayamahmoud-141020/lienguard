@@ -42,6 +42,7 @@
 @layer base {
   html {
     font-feature-settings: "cv11", "ss01";
+    color-scheme: light;
   }
   body {
     background: var(--color-canvas);

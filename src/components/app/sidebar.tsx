@@ -41,7 +41,7 @@ export function Sidebar() {
         <span className="flex size-7 items-center justify-center rounded-[6px] bg-brand text-white">
           <ShieldCheck aria-hidden className="size-4" />
         </span>
-        <span className="text-[15px] font-semibold tracking-[-0.01em]">LienGuard</span>
+        <span className="text-[15px] font-semibold tracking-[-0.01em] text-ink">LienGuard</span>
       </Link>
       <nav aria-label="Main" className="flex flex-col gap-0.5">
         <NavItem href="/" icon={<LayoutGrid aria-hidden />} label="Batches" active={path === "/" || (Boolean(batchId) && !/\/(drafts|audit)$/.test(path))} />
