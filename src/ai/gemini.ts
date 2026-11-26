@@ -30,30 +30,50 @@ export function withBackoff(fn: GenerateFn, opts: { retries?: number; baseMs?: n
   };
 }
 
-/** At most `max` calls in flight (per server instance). Free-tier limits are per minute, so keep this small. */
-export function limitConcurrency(fn: GenerateFn, max: number): GenerateFn {
-  let running = 0;
-  const waiting: (() => void)[] = [];
-  return async (req) => {
-    if (running >= max) await new Promise<void>((r) => waiting.push(r));
-    running++;
+/** A counting gate: at most `max` tasks run at once; the rest wait in order. */
+class Gate {
+  private running = 0;
+  private waiting: (() => void)[] = [];
+  constructor(private max: number) {}
+  async run<T>(task: () => Promise<T>): Promise<T> {
+    if (this.running >= this.max) await new Promise<void>((r) => this.waiting.push(r));
+    this.running++;
     try {
-      return await fn(req);
+      return await task();
     } finally {
-      running--;
-      waiting.shift()?.();
+      this.running--;
+      this.waiting.shift()?.();
     }
-  };
+  }
 }
 
-/** Real client: SDK call → concurrency limit → backoff on 429/503. */
-export function geminiGenerate(apiKey: string, maxConcurrency: number): GenerateFn {
+/** At most `max` calls in flight through this wrapper (or through `gate`, if several wrappers share one). */
+export function limitConcurrency(fn: GenerateFn, max: number, gate: Gate = new Gate(max)): GenerateFn {
+  return (req) => gate.run(() => fn(req));
+}
+
+/** One gate per server instance (module scope), shared by every client built per request. */
+const instanceGates = new Map<number, Gate>();
+function instanceGate(max: number): Gate {
+  let g = instanceGates.get(max);
+  if (!g) instanceGates.set(max, (g = new Gate(max)));
+  return g;
+}
+
+/**
+ * Real client: SDK call → per-instance concurrency limit → backoff on 429/503/network drops.
+ * `call` is injectable so tests can check the wiring without network.
+ */
+export function geminiGenerate(apiKey: string, maxConcurrency: number, call: GenerateFn = sdkCall(apiKey)): GenerateFn {
+  return withBackoff(limitConcurrency(call, maxConcurrency, instanceGate(maxConcurrency)));
+}
+
+function sdkCall(apiKey: string): GenerateFn {
   const ai = new GoogleGenAI({ apiKey });
-  const call: GenerateFn = async (req) => {
+  return async (req) => {
     const res = await ai.models.generateContent({ model: req.model, contents: req.contents as never, config: req.config as never });
     return { text: res.text };
   };
-  return withBackoff(limitConcurrency(call, maxConcurrency));
 }
 
 /** Gemini's JSON-schema subset doesn't need the `$schema` marker. */

@@ -76,7 +76,7 @@ pnpm install
 cp .env.example .env.local      # fill in DATABASE_URL, DIRECT_URL, keys, DEMO_PASSCODE
 pnpm prisma migrate deploy      # needs DATABASE_URL / DIRECT_URL in the shell env (Prisma reads .env, not .env.local)
 pnpm dev                        # http://localhost:3000 → "Use sample data"
-pnpm test                       # 84 tests, no network
+pnpm test                       # 85 tests, no network
 pnpm samples                    # regenerate the fictional sample batch
 pnpm smoke:gemini               # live: Gemini reads the sample PDFs, compared with fixtures
 ```

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { loadEnv } from "@/env";
 import { GeminiExtractor } from "@/ai/gemini-extractor";
-import { limitConcurrency, withBackoff, type GeminiRequest, type GenerateFn } from "@/ai/gemini";
+import { geminiGenerate, limitConcurrency, withBackoff, type GeminiRequest, type GenerateFn } from "@/ai/gemini";
 import { GeminiEmailWriter } from "@/email/gemini-writer";
 import { draftEmail } from "@/email/writer";
 import { buildSubIssues, type SubIssues } from "@/email/issues";
@@ -116,6 +116,24 @@ describe("S-12 Gemini provider", () => {
     };
     const limited = limitConcurrency(slow, 2);
     await Promise.all(Array.from({ length: 7 }, () => limited({ model: "m", contents: [], config: {} })));
+    expect(peak).toBe(2);
+  });
+
+  it("AC-12.4 clients built per request share one limit per server instance", async () => {
+    let running = 0;
+    let peak = 0;
+    const slow: GenerateFn = async () => {
+      running++;
+      peak = Math.max(peak, running);
+      await new Promise((r) => setTimeout(r, 5));
+      running--;
+      return { text: "x" };
+    };
+    // Each request calls getExtractor()/getWriter(), which builds a new client.
+    const a = geminiGenerate("k", 2, slow);
+    const b = geminiGenerate("k", 2, slow);
+    const c = geminiGenerate("k", 2, slow);
+    await Promise.all([a, b, c, a, b, c, a].map((g) => g({ model: "m", contents: [], config: {} })));
     expect(peak).toBe(2);
   });
 
