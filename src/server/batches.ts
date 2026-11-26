@@ -191,3 +191,9 @@ export async function listBatches() {
     return { id: b.id, name: b.name, kind: b.kind, createdAt: b.createdAt, status: b.status, error: b.error, exposedCents: r?.exposedCents ?? null, hold: r?.counts.hold ?? null };
   });
 }
+
+/** Stored AI readings for some documents of a batch (display only: confidence and source text). */
+export async function getDocumentReadings(batchId: string, ids: string[]): Promise<Map<string, ExtractOutcome>> {
+  const rows = await prisma.document.findMany({ where: { batchId, id: { in: ids } }, select: { id: true, extractionJson: true } });
+  return new Map(rows.map((r) => [r.id, outcomeOf(r.extractionJson)]));
+}

@@ -1,94 +1,121 @@
+import { AlertOctagon, ChevronLeft, FileClock, FileQuestion } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBatchView } from "@/server/batches";
+import { listDrafts } from "@/server/drafts";
 import { buildDashboard } from "@/view/models";
+import { formatMoney } from "@/domain/money";
 import { formatDate } from "@/domain/dates";
 import { Processing } from "@/app/_components/processing";
 import { PaymentsTable } from "@/app/_components/payments-table";
-import { Card } from "@/app/_components/ui";
+import { DraftEmailsButton } from "@/app/_components/drafts";
+import { KpiStrip } from "@/components/app/kpis";
+import { ExposureBars } from "@/components/app/exposure-bars";
+import { ButtonLink } from "@/components/ui/button";
+import { PageHeader, Panel, PanelHeader } from "@/components/ui/layout";
+import { BatchStatusBadge } from "@/components/ui/status";
 
 export const dynamic = "force-dynamic";
+
+function Back() {
+  return (
+    <Link href="/" className="inline-flex items-center gap-0.5 text-[13px] text-muted hover:text-ink">
+      <ChevronLeft aria-hidden className="size-4" />
+      Batches
+    </Link>
+  );
+}
 
 export default async function BatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const batch = await getBatchView(id);
   if (!batch) notFound();
+  const subtitle = `Rules applied as of ${formatDate(batch.today)} (demo date). ${batch.kind === "sample" ? "Sample data with recorded AI readings." : "Uploaded batch."}`;
 
-  const header = (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+  if (batch.status === "failed") {
+    return (
       <div>
-        <Link href="/" className="text-xs text-slate-500 hover:underline">
-          ← All batches
-        </Link>
-        <h1 className="text-2xl font-semibold">{batch.name}</h1>
-        <p className="text-sm text-slate-500">Rules applied as of {formatDate(batch.today)} (demo date)</p>
+        <PageHeader back={<Back />} title={batch.name} description={subtitle} actions={<BatchStatusBadge status="failed" />} />
+        <Panel className="flex gap-3 border-hold-line bg-hold-bg px-5 py-4">
+          <AlertOctagon aria-hidden className="mt-0.5 size-5 shrink-0 text-hold" />
+          <div>
+            <p className="text-sm font-semibold text-hold">This batch could not be checked</p>
+            <p className="mt-1 text-[13px] text-ink-2">{batch.error ?? "The rules could not be applied."}</p>
+            <p className="mt-2 text-[13px] text-ink-2">Every payment in it should be treated as on hold. Upload the batch again, or start from the sample data.</p>
+          </div>
+        </Panel>
       </div>
-      {batch.result ? (
-        <div className="flex gap-2">
-          <Link href={`/batches/${id}/drafts`} className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">
-            Email drafts →
-          </Link>
-          <Link href={`/batches/${id}/audit`} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50">
-            Audit log
-          </Link>
-        </div>
-      ) : null}
-    </div>
-  );
+    );
+  }
 
   if (batch.status === "processing" || !batch.result) {
     return (
       <div>
-        {header}
+        <PageHeader back={<Back />} title={batch.name} description={subtitle} actions={<BatchStatusBadge status="processing" />} />
         <Processing batchId={id} documents={batch.documents} />
       </div>
     );
   }
 
   const d = buildDashboard(batch.result);
-  const maxProject = Math.max(1, ...d.byProject.map((p) => p.exposedCents));
-  return (
-    <div className="space-y-6">
-      {header}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card label="Exposed" value={d.exposed} hint="Paid but not protected by a valid waiver" tone={d.exposedCents ? "danger" : "ok"} />
-        <Card label="On hold" value={d.hold} hint="Payments with at least one HOLD reason" tone={d.hold ? "danger" : "ok"} />
-        <Card label="Safe" value={d.safe} hint={`${d.readyToPay} ready to pay (not paid yet)`} tone="ok" />
-        <Card label="Docs needing review" value={d.needsReview} hint="Couldn't be read with confidence" tone={d.needsReview ? "warn" : "neutral"} />
-      </div>
+  const drafts = await listDrafts(id);
+  const subsWithHold = new Set(d.rows.filter((r) => r.decision === "HOLD").map((r) => r.subCode)).size;
+  const projects = d.byProject.map((p) => ({ ...p, hold: d.rows.filter((r) => r.projectCode === p.code && r.decision === "HOLD").length }));
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-sm font-semibold text-slate-700">Exposure by project</h2>
-        <div className="space-y-2">
-          {d.byProject.map((p) => (
-            <div key={p.code} className="grid grid-cols-[180px_1fr_110px] items-center gap-3 text-sm">
-              <span className="truncate">{p.name}</span>
-              <div className="h-3 rounded bg-slate-100">
-                <div className="h-3 rounded bg-red-600" style={{ width: `${(p.exposedCents / maxProject) * 100}%` }} />
-              </div>
-              <span className="text-right tabular-nums">{p.exposed}</span>
-            </div>
-          ))}
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        back={<Back />}
+        title={batch.name}
+        description={subtitle}
+        actions={
+          <>
+            <ButtonLink href={`/batches/${id}/audit`} variant="ghost">
+              <FileClock aria-hidden />
+              Audit log
+            </ButtonLink>
+            <DraftEmailsButton batchId={id} existing={drafts.length} toWrite={subsWithHold} />
+          </>
+        }
+      />
+
+      <KpiStrip
+        exposed={d.exposed}
+        exposedCents={d.exposedCents}
+        hold={d.hold}
+        safe={d.safe}
+        readyToPay={d.readyToPay}
+        needsReview={d.needsReview}
+        total={d.rows.length}
+      />
+
+      <Panel>
+        <PanelHeader title="Exposed by project" description={`${formatMoney(d.exposedCents)} at risk across ${projects.length} projects`} />
+        <div className="px-4 py-4">
+          <ExposureBars projects={projects} totalCents={d.exposedCents} />
         </div>
-      </section>
+      </Panel>
 
       {d.unmatched.length ? (
-        <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
-          <h2 className="font-semibold text-amber-900">Documents that couldn&apos;t be matched ({d.unmatched.length})</h2>
-          <ul className="mt-2 list-disc pl-5 text-amber-900">
+        <Panel>
+          <PanelHeader title="Documents not matched" description="These couldn't be tied to a payment, so they count as needing review." />
+          <ul className="divide-y divide-line">
             {d.unmatched.map((u) => (
-              <li key={u.documentId}>
-                <a className="underline" href={`/api/documents/${u.documentId}/pdf`} target="_blank" rel="noreferrer">
-                  {u.fileName}
-                </a>
-                : {u.reason}
+              <li key={u.documentId} className="flex gap-2 px-4 py-2.5 text-[13px]">
+                <FileQuestion aria-hidden className="mt-0.5 size-4 shrink-0 text-review" />
+                <span className="text-ink-2">
+                  <span className="font-medium text-ink">{u.fileName}</span>: {u.reason}
+                </span>
               </li>
             ))}
           </ul>
-        </section>
+        </Panel>
       ) : null}
 
-      <PaymentsTable batchId={id} rows={d.rows} />
+      <Panel>
+        <PanelHeader title="Payments" description="Open a payment to see every rule check and the documents behind it." />
+        <PaymentsTable batchId={id} rows={d.rows} />
+      </Panel>
     </div>
   );
 }

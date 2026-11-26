@@ -1,10 +1,12 @@
+import { ChevronLeft, MailX } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBatchView } from "@/server/batches";
 import { listDrafts } from "@/server/drafts";
 import { loadEnv } from "@/env";
-import { BulkActions, DraftCard, GenerateDrafts } from "@/app/_components/drafts";
-import { Empty } from "@/app/_components/ui";
+import { buildDashboard } from "@/view/models";
+import { BulkBar, DraftCard, DraftEmailsButton } from "@/app/_components/drafts";
+import { EmptyState, PageHeader, Panel } from "@/components/ui/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -14,36 +16,35 @@ export default async function DraftsPage({ params }: { params: Promise<{ id: str
   if (!batch?.result) notFound();
   const drafts = await listDrafts(id);
   const override = loadEnv().DEMO_EMAIL_OVERRIDE;
+  const toWrite = new Set(buildDashboard(batch.result).rows.filter((r) => r.decision === "HOLD").map((r) => r.subCode)).size;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <Link href={`/batches/${id}`} className="text-xs text-slate-500 hover:underline">
-            ← {batch.name}
+    <div>
+      <PageHeader
+        back={
+          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted hover:text-ink">
+            <ChevronLeft aria-hidden className="size-4" />
+            {batch.name}
           </Link>
-          <h1 className="text-2xl font-semibold">Follow-up emails</h1>
-          <p className="max-w-2xl text-sm text-slate-600">
-            One email per subcontractor with payments on hold. The AI writes the wording; every amount and date is filled in by code and checked against
-            the data. Nothing is sent until a person approves it.
-          </p>
-          {override ? <p className="mt-1 text-xs font-medium text-amber-700">Demo mode: every email is redirected to the demo inbox.</p> : null}
-        </div>
-        {drafts.length ? <BulkActions drafts={drafts} /> : null}
-      </div>
+        }
+        title="Follow-up emails"
+        description={`One email per subcontractor with payments on hold. The AI writes the wording; code fills in every amount and date and checks them against the data. Nothing is sent until a person approves it.${override ? " Demo: every email goes to one demo inbox." : ""}`}
+      />
       {drafts.length === 0 ? (
-        <Empty>
-          <p className="mb-4">No drafts yet for this batch.</p>
-          <div className="flex justify-center">
-            <GenerateDrafts batchId={id} label="Generate drafts" />
-          </div>
-        </Empty>
+        <Panel>
+          <EmptyState icon={<MailX aria-hidden />} title="No emails drafted yet" action={<DraftEmailsButton batchId={id} existing={0} toWrite={toWrite} />}>
+            Draft one email per subcontractor with a payment on hold. You review every one before anything is sent.
+          </EmptyState>
+        </Panel>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {drafts.map((d) => (
-            <DraftCard key={`${d.id}-${d.status}-${d.body.length}`} draft={d} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 items-start gap-4">
+            {drafts.map((d) => (
+              <DraftCard key={`${d.id}-${d.status}-${d.body.length}`} draft={d} />
+            ))}
+          </div>
+          <BulkBar drafts={drafts} />
+        </>
       )}
     </div>
   );

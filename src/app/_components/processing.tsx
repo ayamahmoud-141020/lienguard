@@ -1,21 +1,24 @@
 "use client";
 
+import { CheckCircle2, CircleDashed, CircleHelp, FileText, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { post } from "./client-api";
 import { runQueue, type QueueStatus } from "@/lib/queue";
+import { Panel, PanelHeader } from "@/components/ui/layout";
+import { PasscodeNote } from "@/components/app/demo-access";
+import { cn } from "@/components/ui/cn";
 
 type Doc = { id: string; fileName: string; status: string };
 
-const label: Record<QueueStatus, string> = { queued: "Queued", reading: "Reading…", done: "Done", "needs review": "Needs review" };
-const tone: Record<QueueStatus, string> = {
-  queued: "text-slate-500",
-  reading: "text-sky-700",
-  done: "text-emerald-700",
-  "needs review": "text-amber-700",
+const view: Record<QueueStatus, { label: string; icon: React.ReactNode; cls: string }> = {
+  queued: { label: "Waiting", icon: <CircleDashed aria-hidden />, cls: "text-muted" },
+  reading: { label: "Reading", icon: <Loader2 aria-hidden className="animate-spin" />, cls: "text-ink-2" },
+  done: { label: "Read", icon: <CheckCircle2 aria-hidden />, cls: "text-safe" },
+  "needs review": { label: "Needs review", icon: <CircleHelp aria-hidden />, cls: "text-review" },
 };
 
-/** Sends one extraction request per PDF (max 4 in flight), then re-runs the rules. */
+/** Sends one extraction request per PDF (max 4 in flight), then applies the rules. Unchanged logic, new look. */
 export function Processing({ batchId, documents }: { batchId: string; documents: Doc[] }) {
   const router = useRouter();
   const [status, setStatus] = useState<Record<string, QueueStatus>>(() =>
@@ -48,29 +51,46 @@ export function Processing({ batchId, documents }: { batchId: string; documents:
   }, [batchId, documents, router]);
 
   const done = Object.values(status).filter((s) => s === "done" || s === "needs review").length;
+  const pct = documents.length ? Math.round((done / documents.length) * 100) : 0;
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Reading documents</h2>
-        <span className="text-sm text-slate-600 tabular-nums">
-          {done} / {documents.length} {phase === "deciding" ? "· applying rules…" : ""}
-        </span>
+    <Panel>
+      <PanelHeader
+        title={phase === "deciding" ? "Applying the rules" : "Reading documents"}
+        description="One request per PDF, four at a time. A document that can't be read with confidence goes to review, never silently passes."
+        actions={
+          <span className="num text-[13px] font-medium text-ink-2">
+            {done} of {documents.length}
+          </span>
+        }
+      />
+      <div className="px-4 pt-4">
+        <div className="h-1.5 overflow-hidden rounded-full bg-[#eef1f4]" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full rounded-full bg-brand transition-[width] duration-300" style={{ width: `${pct}%` }} />
+        </div>
+        {error ? (
+          <div className="mt-3 rounded-[6px] border border-hold-line bg-hold-bg px-3 py-2 text-[13px] text-hold">
+            {error}
+            <PasscodeNote className="mt-1" />
+          </div>
+        ) : null}
       </div>
-      <div className="h-2 overflow-hidden rounded bg-slate-200">
-        <div className="h-full bg-emerald-600 transition-all" style={{ width: `${documents.length ? (done / documents.length) * 100 : 0}%` }} />
-      </div>
-      {error ? <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
-      <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
-        {documents.map((d) => {
-          const s = status[d.id] ?? "queued";
+      <ul className="mt-3 grid grid-cols-2 border-t border-line">
+        {documents.map((d, i) => {
+          const s = view[status[d.id] ?? "queued"];
           return (
-            <li key={d.id} className="flex items-center justify-between px-4 py-2 text-sm">
-              <span className="font-mono text-xs">{d.fileName}</span>
-              <span className={`font-medium ${tone[s]}`}>{label[s]}</span>
+            <li key={d.id} className={cn("flex h-10 items-center justify-between gap-3 border-b border-line px-4 text-[13px]", i % 2 === 0 && "border-r")}>
+              <span className="flex min-w-0 items-center gap-2 text-ink">
+                <FileText aria-hidden className="size-4 shrink-0 text-muted" />
+                <span className="truncate">{d.fileName}</span>
+              </span>
+              <span className={cn("flex shrink-0 items-center gap-1 text-xs font-medium [&_svg]:size-3.5", s.cls)}>
+                {s.icon}
+                {s.label}
+              </span>
             </li>
           );
         })}
       </ul>
-    </div>
+    </Panel>
   );
 }

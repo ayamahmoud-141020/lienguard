@@ -3,6 +3,8 @@
 const PASS_KEY = "lienguard.passcode";
 const NAME_KEY = "lienguard.actor";
 
+let memory = { passcode: "", actor: "" };
+
 function read(key: string): string {
   try {
     return sessionStorage.getItem(key) ?? "";
@@ -12,17 +14,29 @@ function read(key: string): string {
 }
 
 export function getIdentity(): { passcode: string; actor: string } {
-  return { passcode: read(PASS_KEY), actor: read(NAME_KEY) };
+  return { passcode: read(PASS_KEY) || memory.passcode, actor: read(NAME_KEY) || memory.actor };
 }
 
+const EVENT = "lienguard:identity";
+
 export function setIdentity(passcode: string, actor: string): void {
+  memory = { passcode, actor };
   try {
     sessionStorage.setItem(PASS_KEY, passcode);
     sessionStorage.setItem(NAME_KEY, actor);
   } catch {
     // storage unavailable: values only live for this page view
   }
+  window.dispatchEvent(new Event(EVENT));
 }
+
+/** Calls `fn` whenever the passcode or name changes in this tab. */
+export function onIdentityChange(fn: () => void): () => void {
+  window.addEventListener(EVENT, fn);
+  return () => window.removeEventListener(EVENT, fn);
+}
+
+export const PASSCODE_NOTE = "Demo passcode required — ask Aya";
 
 export class ApiError extends Error {
   constructor(
@@ -47,7 +61,7 @@ export async function post<T = unknown>(url: string, body?: FormData | object): 
   const res = await fetch(url, { method: "POST", headers, body: payload });
   const json = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) {
-    const msg = res.status === 401 ? "Enter the demo passcode (top right) to make changes." : (json.error ?? `Request failed (${res.status})`);
+    const msg = res.status === 401 ? `${PASSCODE_NOTE}. Unlock demo access (top right) to continue.` : (json.error ?? `Request failed (${res.status})`);
     throw new ApiError(msg, res.status, json);
   }
   return json as T;

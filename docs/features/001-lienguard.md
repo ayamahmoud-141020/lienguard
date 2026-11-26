@@ -241,7 +241,7 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-12 | Gemini provider | S-5, S-10 | awaiting-merge |
 | S-13 | Deterministic sample, no stuck batches | S-9, S-12 | checking |
 | S-14 | Open sample data | S-11, S-13 | checking |
-| S-15 | Frontend redesign | S-13, S-14 | coding |
+| S-15 | Frontend redesign | S-13, S-14 | checking |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

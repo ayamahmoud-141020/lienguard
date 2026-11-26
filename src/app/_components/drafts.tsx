@@ -1,158 +1,251 @@
 "use client";
 
+import { AlertTriangle, Check, CheckCheck, Loader2, Mail, Send, ShieldCheck, SkipForward } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { post } from "./client-api";
 import type { EmailDraftRecord } from "@/email/workflow";
+import { postcheck } from "@/email/postcheck";
+import { formatMoney } from "@/domain/money";
+import { ruleShort } from "@/view/rule-labels";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Pill } from "@/components/ui/status";
+import { PasscodeNote, useUnlocked } from "@/components/app/demo-access";
+import { cn } from "@/components/ui/cn";
 
-const statusStyle: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  approved: "bg-sky-100 text-sky-800",
-  skipped: "bg-slate-100 text-slate-500",
-  sent: "bg-emerald-100 text-emerald-800",
-  failed: "bg-red-100 text-red-800",
-};
-
-export function GenerateDrafts({ batchId, label }: { batchId: string; label: string }) {
+/** Batch page CTA: write the drafts (open to everyone), or open them if they exist. */
+export function DraftEmailsButton({ batchId, existing, toWrite }: { batchId: string; existing: number; toWrite: number }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  if (existing > 0) {
+    return (
+      <ButtonLink href={`/batches/${batchId}/drafts`} variant="primary">
+        <Mail aria-hidden />
+        Review follow-up emails ({existing})
+      </ButtonLink>
+    );
+  }
+  if (toWrite === 0) {
+    return (
+      <Button variant="primary" disabled>
+        <Mail aria-hidden />
+        No follow-up emails needed
+      </Button>
+    );
+  }
   return (
-    <div>
-      <button
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          setError("");
-          try {
-            await post(`/api/batches/${batchId}/drafts`);
-            router.refresh();
-          } catch (e) {
-            setError((e as Error).message);
-          }
+    <Button
+      variant="primary"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const r = await post<{ created: number }>(`/api/batches/${batchId}/drafts`);
+          toast.success(`Drafted ${r.created} follow-up email${r.created === 1 ? "" : "s"}`);
+          router.push(`/batches/${batchId}/drafts`);
+        } catch (e) {
+          toast.error((e as Error).message);
           setBusy(false);
-        }}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
-      >
-        {busy ? "Writing drafts…" : label}
-      </button>
-      {error ? <p className="mt-2 text-sm text-red-700">{error}</p> : null}
-    </div>
+        }
+      }}
+    >
+      {busy ? <Loader2 aria-hidden className="animate-spin" /> : <Mail aria-hidden />}
+      {busy ? "Drafting emails…" : `Draft follow-up emails (${toWrite})`}
+    </Button>
   );
 }
 
-export function BulkActions({ drafts }: { drafts: EmailDraftRecord[] }) {
+const statusPill: Record<string, { tone: "neutral" | "brand" | "safe" | "hold"; label: string }> = {
+  draft: { tone: "neutral", label: "Draft" },
+  approved: { tone: "brand", label: "Approved" },
+  skipped: { tone: "neutral", label: "Skipped" },
+  sent: { tone: "safe", label: "Sent" },
+  failed: { tone: "hold", label: "Send failed" },
+};
+
+const when = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" }) + " UTC" : "";
+
+export function DraftCard({ draft }: { draft: EmailDraftRecord }) {
   const router = useRouter();
+  const unlocked = useUnlocked();
+  const [body, setBody] = useState(draft.body);
+  const [subject, setSubject] = useState(draft.subject);
   const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
+  const dirty = body !== draft.body || subject !== draft.subject;
+  const locked = draft.status === "sent";
+  const check = useMemo(() => postcheck(`${subject}\n${body}`, draft.issues), [subject, body, draft.issues]);
+  const pill = statusPill[draft.status] ?? statusPill.draft!;
+
+  const act = async (action: "approve" | "skip" | "send" | "edit") => {
+    setBusy(action);
+    try {
+      if (action === "edit") {
+        const r = await post<{ warnings: string[] }>(`/api/drafts/${draft.id}/edit`, { body, subject });
+        if (r.warnings.length) toast.warning(`Saved with ${r.warnings.length} warning${r.warnings.length === 1 ? "" : "s"}: check the numbers before sending`);
+        else toast.success("Edit saved");
+      } else {
+        await post(`/api/drafts/${draft.id}/${action}`);
+        toast.success(action === "approve" ? `Approved email to ${draft.issues.subName}` : action === "skip" ? `Skipped ${draft.issues.subName}` : `Sent email to ${draft.issues.subName}`);
+      }
+      router.refresh();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+    setBusy("");
+  };
+
+  return (
+    <article className="rounded-[var(--radius-card)] border border-line bg-surface shadow-[var(--shadow-card)]">
+      <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-ink">{draft.issues.subName}</h3>
+          <p className="mt-0.5 truncate text-xs text-muted">
+            To {draft.issues.contactName}, {draft.toAddress}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {check.ok ? (
+            <Pill tone="safe" icon={<ShieldCheck aria-hidden />}>
+              All numbers verified
+            </Pill>
+          ) : (
+            <Pill tone="warn" icon={<AlertTriangle aria-hidden />}>
+              Check numbers
+            </Pill>
+          )}
+          <Pill tone={pill.tone}>{pill.label}</Pill>
+        </div>
+      </header>
+
+      <ul className="border-b border-line bg-subtle px-4 py-2.5">
+        {draft.issues.issues.map((i, n) => (
+          <li key={`${i.paymentId}-${i.ruleId}-${n}`} className="flex items-baseline gap-2 py-0.5 text-[13px]">
+            <span className="num shrink-0 font-semibold text-hold">{i.ruleId}</span>
+            <span className="text-ink">{ruleShort(i.ruleId)}</span>
+            <span className="truncate text-muted">
+              {i.projectName}, invoice {i.invoiceNo}, {formatMoney(i.amountCents)}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="space-y-2 p-4">
+        <input
+          aria-label="Subject"
+          disabled={locked}
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          className="h-9 w-full rounded-[6px] border border-line-strong px-2.5 text-[13px] font-medium disabled:bg-subtle"
+        />
+        <textarea
+          aria-label="Email body"
+          disabled={locked}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={6}
+          className="max-h-[480px] min-h-[160px] w-full resize-y rounded-[6px] [field-sizing:content] border border-line-strong px-2.5 py-2 text-[13px] leading-5 text-ink disabled:bg-subtle"
+        />
+        {!check.ok ? (
+          <p className="rounded-[6px] border border-warn-line bg-warn-bg px-2.5 py-2 text-xs text-warn">{check.problems.join("; ")}</p>
+        ) : null}
+        {draft.error ? <p className="rounded-[6px] border border-hold-line bg-hold-bg px-2.5 py-2 text-xs text-hold">Last send failed: {draft.error}</p> : null}
+        <p className="text-xs text-muted">
+          {draft.source === "ai" ? "Wording by AI. Every amount and date was filled in by code." : "Code template: the AI draft didn't pass the number check."}
+        </p>
+      </div>
+
+      <footer className="flex flex-wrap items-center gap-2 border-t border-line px-4 py-3">
+        {locked ? (
+          <p className="flex items-center gap-1.5 text-[13px] text-safe">
+            <CheckCheck aria-hidden className="size-4" />
+            <span>
+              {`Sent ${when(draft.sentAt)}`}
+              {draft.approvedBy ? <span className="text-muted">{`, approved by ${draft.approvedBy}`}</span> : null}
+            </span>
+          </p>
+        ) : (
+          <>
+            {dirty ? (
+              <Button size="sm" variant="primary" disabled={!!busy || !unlocked} onClick={() => act("edit")}>
+                {busy === "edit" ? <Loader2 aria-hidden className="animate-spin" /> : <Check aria-hidden />}
+                Save edit
+              </Button>
+            ) : null}
+            {draft.status === "draft" && !dirty ? (
+              <Button size="sm" variant="primary" disabled={!!busy} onClick={() => act("approve")}>
+                <Check aria-hidden />
+                Approve
+              </Button>
+            ) : null}
+            {(draft.status === "approved" || (draft.status === "failed" && draft.approvedBy)) && !dirty ? (
+              <Button size="sm" variant="primary" disabled={!!busy || !unlocked} onClick={() => act("send")}>
+                {busy === "send" ? <Loader2 aria-hidden className="animate-spin" /> : <Send aria-hidden />}
+                {draft.status === "failed" ? "Retry send" : "Send"}
+              </Button>
+            ) : null}
+            {draft.status !== "skipped" ? (
+              <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => act("skip")}>
+                <SkipForward aria-hidden />
+                Skip
+              </Button>
+            ) : null}
+            {draft.status === "approved" && draft.approvedBy ? <span className="text-xs text-muted">Approved by {draft.approvedBy}</span> : null}
+            {dirty || draft.status === "approved" ? <PasscodeNote className="ml-auto" /> : null}
+          </>
+        )}
+      </footer>
+    </article>
+  );
+}
+
+/** Sticky bar: approve everything still in draft, then send what's approved. */
+export function BulkBar({ drafts }: { drafts: EmailDraftRecord[] }) {
+  const router = useRouter();
+  const unlocked = useUnlocked();
+  const [busy, setBusy] = useState("");
+  const toApprove = drafts.filter((d) => d.status === "draft");
+  const toSend = drafts.filter((d) => d.status === "approved" || (d.status === "failed" && d.approvedBy));
+  const sent = drafts.filter((d) => d.status === "sent").length;
+
   const run = async (kind: "approve" | "send") => {
     setBusy(kind);
-    setError("");
-    const targets = drafts.filter((d) => (kind === "approve" ? d.status === "draft" : d.status === "approved" || (d.status === "failed" && d.approvedBy)));
+    const targets = kind === "approve" ? toApprove : toSend;
+    let ok = 0;
     const failures: string[] = [];
     for (const d of targets) {
       try {
         await post(`/api/drafts/${d.id}/${kind}`);
+        ok++;
       } catch (e) {
         failures.push(`${d.issues.subName}: ${(e as Error).message}`);
       }
     }
-    if (failures.length) setError(failures.join(" · "));
+    if (ok) toast.success(kind === "approve" ? `Approved ${ok} email${ok === 1 ? "" : "s"}` : `Sent ${ok} email${ok === 1 ? "" : "s"}`);
+    if (failures.length) toast.error(failures.join("\n"));
     setBusy("");
     router.refresh();
   };
-  const pendingApprove = drafts.filter((d) => d.status === "draft").length;
-  const pendingSend = drafts.filter((d) => d.status === "approved").length;
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <button disabled={!!busy || !pendingApprove} onClick={() => run("approve")} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50">
-        {busy === "approve" ? "Approving…" : `Approve all (${pendingApprove})`}
-      </button>
-      <button disabled={!!busy || !pendingSend} onClick={() => run("send")} className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">
-        {busy === "send" ? "Sending…" : `Send approved (${pendingSend})`}
-      </button>
-      {error ? <p className="w-full text-sm text-red-700">{error}</p> : null}
-    </div>
-  );
-}
-
-export function DraftCard({ draft }: { draft: EmailDraftRecord }) {
-  const router = useRouter();
-  const [body, setBody] = useState(draft.body);
-  const [subject, setSubject] = useState(draft.subject);
-  const [warnings, setWarnings] = useState<string[]>([]);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState("");
-  const dirty = body !== draft.body || subject !== draft.subject;
-  const locked = draft.status === "sent";
-
-  const act = async (action: "approve" | "skip" | "send" | "edit") => {
-    setBusy(action);
-    setError("");
-    try {
-      if (action === "edit") {
-        const r = await post<{ warnings: string[] }>(`/api/drafts/${draft.id}/edit`, { body, subject });
-        setWarnings(r.warnings);
-      } else await post(`/api/drafts/${draft.id}/${action}`);
-      router.refresh();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-    setBusy("");
-  };
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-        <div>
-          <div className="font-semibold">{draft.issues.subName}</div>
-          <div className="text-xs text-slate-500">
-            To: {draft.toAddress} · {draft.issues.issues.length} issue{draft.issues.issues.length === 1 ? "" : "s"} ·{" "}
-            {draft.source === "ai" ? "AI wording, numbers filled by code" : "code template (AI draft failed the check)"}
-          </div>
+    <div className="sticky bottom-0 z-20 -mx-8 mt-5 border-t border-line bg-surface/95 px-8 py-3 backdrop-blur">
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="num text-[13px] text-ink-2">
+          {drafts.length} emails: {toApprove.length} to review, {toSend.length} approved, {sent} sent
+        </p>
+        <div className={cn("ml-auto flex items-center gap-2")}>
+          <PasscodeNote />
+          <Button disabled={!!busy || toApprove.length === 0} onClick={() => run("approve")}>
+            {busy === "approve" ? <Loader2 aria-hidden className="animate-spin" /> : <CheckCheck aria-hidden />}
+            Approve all ({toApprove.length})
+          </Button>
+          <Button variant="primary" disabled={!!busy || toSend.length === 0 || !unlocked} onClick={() => run("send")}>
+            {busy === "send" ? <Loader2 aria-hidden className="animate-spin" /> : <Send aria-hidden />}
+            Send approved ({toSend.length})
+          </Button>
         </div>
-        <span className={`rounded px-2 py-0.5 text-xs font-semibold ${statusStyle[draft.status] ?? ""}`}>
-          {draft.status}
-          {draft.approvedBy && draft.status !== "draft" ? ` · by ${draft.approvedBy}` : ""}
-        </span>
-      </header>
-      <div className="space-y-2 p-4">
-        <input disabled={locked} value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm font-medium disabled:bg-slate-50" />
-        <textarea disabled={locked} value={body} onChange={(e) => setBody(e.target.value)} rows={Math.min(18, body.split("\n").length + 2)} className="w-full rounded border border-slate-300 px-2 py-1.5 font-mono text-xs leading-relaxed disabled:bg-slate-50" />
-        {warnings.length ? (
-          <div className="rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
-            <b>Check before sending:</b> {warnings.join("; ")}
-          </div>
-        ) : null}
-        {draft.error ? <div className="rounded border border-red-200 bg-red-50 p-2 text-xs text-red-800">Last send failed: {draft.error}</div> : null}
-        {error ? <div className="text-xs text-red-700">{error}</div> : null}
-        {!locked ? (
-          <div className="flex flex-wrap gap-2">
-            {dirty ? (
-              <button disabled={!!busy} onClick={() => act("edit")} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50">
-                {busy === "edit" ? "Saving…" : "Save edit"}
-              </button>
-            ) : null}
-            {draft.status === "draft" && !dirty ? (
-              <button disabled={!!busy} onClick={() => act("approve")} className="rounded bg-sky-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-600">
-                Approve
-              </button>
-            ) : null}
-            {(draft.status === "approved" || (draft.status === "failed" && draft.approvedBy)) && !dirty ? (
-              <button disabled={!!busy} onClick={() => act("send")} className="rounded bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600">
-                {busy === "send" ? "Sending…" : draft.status === "failed" ? "Retry send" : "Send"}
-              </button>
-            ) : null}
-            {draft.status !== "skipped" ? (
-              <button disabled={!!busy} onClick={() => act("skip")} className="rounded px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100">
-                Skip
-              </button>
-            ) : null}
-          </div>
-        ) : (
-          <p className="text-xs text-emerald-700">Sent {draft.sentAt?.slice(0, 16).replace("T", " ")} UTC</p>
-        )}
       </div>
-    </article>
+    </div>
   );
 }
