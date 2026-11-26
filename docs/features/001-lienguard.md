@@ -194,7 +194,7 @@ Base case for each AC unless it says otherwise:
 - **AC-19.4** [R-20] One digest email per run goes to the AP inbox: new holds, cleared holds, exposed $ and drafts waiting for approval. Its numbers are built from the data and checked against it before sending (a post-check).
 
 ### S-20 Activity timeline and the automated loop in docs
-- **AC-20.1** [R-20] The batch page shows an activity timeline: document received, rules re-run, status changed, reminder drafted, notification and digest sent, with time and source ("Automation" or the person's name).
+- **AC-20.1** [R-20] The batch page shows an activity timeline: document received, rules re-run, status changed, reminder drafted, notification and digest sent, with time and source ("Automation" or the person's name). The sentence and source for each event come from a pure, tested function; the page layout is checked by hand (screenshot 18).
 - **AC-20.2** [R-20] README and the home "How it works" strip show the automated loop: document arrives → AI reads → rules re-check → status changes → notify or draft reminder → human approves. *(manual)*
 
 ## 6. Data
@@ -234,7 +234,7 @@ Original questions:
 - **Q3, conditional waiver within the grace period.** Paid ≤ 5 days ago with only a conditional waiver. Proposed: **SAFE, no finding** (there are no warn rules in the MVP).
 
 ## 9. Stories
-_File lists updated 2026-11-25 after the first check report to match where the code actually lives (no scope change). S-15's list was widened on 2026-11-26 after check report 3 to declare `rule-labels.ts`, `screenshots.ts` and one read-only helper._
+_S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare six supporting files, each with its reason. File lists updated 2026-11-25 after the first check report to match where the code actually lives (no scope change). S-15's list was widened on 2026-11-26 after check report 3 to declare `rule-labels.ts`, `screenshots.ts` and one read-only helper._
 
 | Story | Title | ACs | Depends on | Likely files |
 |---|---|---|---|---|
@@ -255,9 +255,9 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `src/view/rule-labels.ts`, `src/server/batches.ts` (read-only `getDocumentReadings` for the payment page), `scripts/screenshots.ts`, `docs/screenshots/**`, `package.json` |
 | S-16 | Honest sample note; AI-quota message | AC-16.1–16.3 | S-12, S-15 | `src/view/copy.ts`, `src/ai/{extractor,gemini-extractor}.ts`, `src/server/batches.ts`, `src/app/api/batches/[id]/documents/[docId]/extract/route.ts`, `src/app/_components/processing.tsx`, `src/app/batches/[id]/page.tsx`, `README.md` |
 | S-17 | UI on shadcn/ui dashboard-01 | AC-17.1–17.4 | S-15, S-16 | `src/components/**`, `src/app/**`, `src/lib/utils.ts`, `src/hooks/**`, `src/view/{charts,highlight}.ts`, `components.json`, `package.json`, `scripts/screenshots.ts`, `docs/screenshots/**`, `docs/decisions/0008-ui-template.md` |
-| S-18 | Inbound documents | AC-18.1–18.4 | S-13, S-17 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/inbound/**`, `src/app/api/batches/[id]/simulate-reply/**`, `scripts/{generate-samples,sample-scenarios}.ts`, `samples/inbound/**`, `src/pipeline/samples.ts`, `src/ai/fixture-extractor.ts`, `prisma/**`, `src/env.ts`, `src/server/access.ts` |
-| S-19 | Daily automation | AC-19.1–19.4 | S-18 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/cron/**`, `src/app/api/batches/[id]/daily-check/**`, `vercel.json`, `src/email/**` |
-| S-20 | Activity timeline; loop in docs | AC-20.1–20.2 | S-18, S-19 | `src/app/batches/[id]/page.tsx`, `src/components/app/{activity,how-it-works}.tsx`, `src/app/_components/automation.tsx`, `README.md` |
+| S-18 | Inbound documents | AC-18.1–18.4 | S-13, S-17 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/inbound/**`, `src/app/api/batches/[id]/simulate-reply/**`, `scripts/{generate-samples,sample-scenarios}.ts`, `samples/inbound/**`, `src/pipeline/samples.ts`, `src/ai/fixture-extractor.ts`, `prisma/**`, `src/env.ts`, `src/server/access.ts`, `src/server/guard.ts` (`hasPasscode`), `src/server/batches.ts` (exports `SAMPLES_DIR`, `dbCache`), `src/domain/dates.ts` (`addDays`, pure) |
+| S-19 | Daily automation | AC-19.1–19.4 | S-18 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/cron/**`, `src/app/api/batches/[id]/daily-check/**`, `vercel.json`, `src/email/**`, `src/server/drafts.ts` (follow-up vs reminder kind, `sentOn` on send, ordering), `src/app/_components/drafts.tsx` (reminder labels) |
+| S-20 | Activity timeline; loop in docs | AC-20.1–20.2 | S-18, S-19 | `src/app/batches/[id]/page.tsx`, `src/components/app/{activity,how-it-works}.tsx`, `src/view/activity.ts`, `src/app/_components/automation.tsx`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
