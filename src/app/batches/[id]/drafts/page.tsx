@@ -5,8 +5,8 @@ import { getBatchView } from "@/server/batches";
 import { listDrafts } from "@/server/drafts";
 import { loadEnv } from "@/env";
 import { buildDashboard } from "@/view/models";
-import { BulkBar, DraftCard, DraftEmailsButton } from "@/app/_components/drafts";
-import { EmptyState, PageHeader, Panel } from "@/components/ui/layout";
+import { BulkBar, DraftEmailsButton, EmailsWorkspace } from "@/app/_components/drafts";
+import { EmptyState, PageHeader, Panel } from "@/components/app/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export default async function DraftsPage({ params }: { params: Promise<{ id: str
     <div>
       <PageHeader
         back={
-          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted hover:text-ink">
+          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted-foreground hover:text-ink">
             <ChevronLeft aria-hidden className="size-4" />
             {batch.name}
           </Link>
@@ -38,11 +38,7 @@ export default async function DraftsPage({ params }: { params: Promise<{ id: str
         </Panel>
       ) : (
         <>
-          <div className="grid grid-cols-2 items-start gap-4">
-            {drafts.map((d) => (
-              <DraftCard key={`${d.id}-${d.status}-${d.body.length}`} draft={d} />
-            ))}
-          </div>
+          <EmailsWorkspace drafts={drafts} />
           <BulkBar drafts={drafts} />
         </>
       )}

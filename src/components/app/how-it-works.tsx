@@ -18,10 +18,10 @@ export function HowItWorks() {
           </span>
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-ink">
-              <span className="num mr-1 text-muted">{i + 1}.</span>
+              <span className="num mr-1 text-muted-foreground">{i + 1}.</span>
               {title}
             </p>
-            <p className="mt-0.5 text-xs leading-[18px] text-muted">{text}</p>
+            <p className="mt-0.5 text-xs leading-[18px] text-muted-foreground">{text}</p>
           </div>
         </li>
       ))}

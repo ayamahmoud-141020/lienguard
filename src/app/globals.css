@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
-/* LienGuard design tokens. One brand colour (deep green) for primary actions;
-   status colours are used only for status. */
+@custom-variant dark (&:is(.dark *));
+
+/* LienGuard tokens on top of the shadcn/ui dashboard-01 template (MIT).
+   One brand colour (deep green) for primary actions; status colours only for status. */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
@@ -12,7 +14,6 @@
   --color-line-strong: #cdd3da;
   --color-ink: #0e1a24;
   --color-ink-2: #334351;
-  --color-muted: #5f6f7e;
 
   --color-brand: #0b5d45;
   --color-brand-hover: #084a37;
@@ -34,26 +35,95 @@
   --radius-card: 8px;
   --shadow-card: 0 1px 2px rgb(14 26 36 / 0.05);
   --shadow-pop: 0 8px 24px rgb(14 26 36 / 0.12), 0 1px 2px rgb(14 26 36 / 0.06);
+}
 
-  --text-2xs: 11px;
-  --text-2xs--line-height: 16px;
+/* shadcn/ui semantic tokens, mapped to the palette above. */
+:root {
+  --radius: 0.5rem;
+  --background: #f3f5f7;
+  --foreground: #0e1a24;
+  --card: #ffffff;
+  --card-foreground: #0e1a24;
+  --popover: #ffffff;
+  --popover-foreground: #0e1a24;
+  --primary: #0b5d45;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f4;
+  --secondary-foreground: #0e1a24;
+  --muted: #f1f4f6;
+  --muted-foreground: #5f6f7e;
+  --accent: #eef1f4;
+  --accent-foreground: #0e1a24;
+  --destructive: #b4231b;
+  --border: #e2e6eb;
+  --input: #cdd3da;
+  --ring: #0b5d45;
+  /* Charts: neutral series colours; status colours are applied per mark only where the mark is a status. */
+  --chart-1: #334351;
+  --chart-2: #5f6f7e;
+  --chart-3: #8a98a5;
+  --chart-4: #b3bec8;
+  --chart-5: #d5dce2;
+  --sidebar: #f7f9fa;
+  --sidebar-foreground: #334351;
+  --sidebar-primary: #0b5d45;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9edf1;
+  --sidebar-accent-foreground: #0e1a24;
+  --sidebar-border: #e2e6eb;
+  --sidebar-ring: #0b5d45;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
   html {
+    font-size: 15px;
     font-feature-settings: "cv11", "ss01";
     color-scheme: light;
   }
   body {
-    background: var(--color-canvas);
-    color: var(--color-ink);
-    font-size: 14px;
-    line-height: 20px;
-  }
-  :focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
-    border-radius: 4px;
+    @apply bg-background text-foreground;
+    line-height: 1.5;
   }
   .num {
     font-variant-numeric: tabular-nums;

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { post } from "./client-api";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/app/button";
 import { PasscodeNote, useUnlocked } from "@/components/app/demo-access";
 
 export function SampleButton() {
@@ -91,7 +91,7 @@ export function UploadPanel() {
           <input name="name" placeholder="December payments" className="mt-1 block h-9 w-full rounded-[6px] border border-line-strong bg-surface px-2.5 text-sm" />
         </label>
         <label className="block text-[13px] font-medium text-ink-2">
-          Payments spreadsheet <span className="font-normal text-muted">(sheets Payments and Projects)</span>
+          Payments spreadsheet <span className="font-normal text-muted-foreground">(sheets Payments and Projects)</span>
           <input required name="payments" type="file" accept=".xlsx" className={fileInput} />
         </label>
         <label className="block text-[13px] font-medium text-ink-2">
@@ -99,7 +99,7 @@ export function UploadPanel() {
           <input required name="subcontractors" type="file" accept=".xlsx" className={fileInput} />
         </label>
         <label className="block text-[13px] font-medium text-ink-2">
-          Waivers and insurance certificates <span className="font-normal text-muted">(PDF, up to 4 MB each)</span>
+          Waivers and insurance certificates <span className="font-normal text-muted-foreground">(PDF, up to 4 MB each)</span>
           <input name="pdfs" type="file" accept="application/pdf" multiple className={fileInput} />
         </label>
       </div>

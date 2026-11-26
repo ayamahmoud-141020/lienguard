@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BatchStatusBadge } from "@/components/ui/status";
+import { BatchStatusBadge } from "@/components/app/status";
 
 type Row = { id: string; name: string; kind: string; created: string; status: string; hold: number | null; exposed: string | null; exposedCents: number | null };
 
-const th = "h-9 px-4 text-left text-xs font-medium text-muted";
+const th = "h-9 px-4 text-left text-xs font-medium text-muted-foreground";
 
 /** Batches table: the whole row opens the batch (Enter works too). */
 export function BatchRows({ rows }: { rows: Row[] }) {
@@ -32,7 +32,7 @@ export function BatchRows({ rows }: { rows: Row[] }) {
           >
             <td className="px-4">
               <span className="font-medium text-ink">{b.name}</span>
-              <span className="ml-2 text-xs text-muted">{b.kind === "sample" ? "Sample data" : "Uploaded"}</span>
+              <span className="ml-2 text-xs text-muted-foreground">{b.kind === "sample" ? "Sample data" : "Uploaded"}</span>
             </td>
             <td className="num px-4 text-ink-2">
               {new Date(b.created).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" })} UTC
@@ -41,7 +41,7 @@ export function BatchRows({ rows }: { rows: Row[] }) {
               <BatchStatusBadge status={b.status} />
             </td>
             <td className="num px-4 text-right text-ink-2">{b.hold ?? "–"}</td>
-            <td className={`num px-4 text-right font-semibold ${b.exposedCents ? "text-hold" : "text-muted"}`}>{b.exposed ?? "–"}</td>
+            <td className={`num px-4 text-right font-semibold ${b.exposedCents ? "text-hold" : "text-muted-foreground"}`}>{b.exposed ?? "–"}</td>
           </tr>
         ))}
       </tbody>

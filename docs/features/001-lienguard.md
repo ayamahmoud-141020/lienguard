@@ -47,6 +47,7 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-16** *(added 2026-11-26, Aya)* Same sample data gives the same result every time, and no batch ever stays `processing`: it ends `ready` or `failed` with a visible error.
 - **R-17** *(added 2026-11-26, Aya; amends R-14)* Reviewers can try the sample batch without a passcode. The passcode stays on: uploading own files (and reading them), editing drafts, sending emails.
 - **R-18** *(added 2026-11-26, Aya)* Be honest that the sample uses recorded readings, and say so where it is shown. If the free AI quota runs out, uploads say so clearly instead of failing silently.
+- **R-19** *(added 2026-11-26, Aya)* The UI is based on a permissively licensed template (shadcn/ui `dashboard-01`, MIT) instead of a custom design. Logic, tests, wording, data and passcode behaviour stay unchanged.
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -173,6 +174,12 @@ Base case for each AC unless it says otherwise:
 - **AC-16.2** [R-18] When the AI provider returns 429 after backoff, the reading is `ok: false` with `code: "quota"`, and the document goes to needs review (HOLD, never a silent pass).
 - **AC-16.3** [R-18] The extract response then carries the notice "AI quota reached, try later". The processing screen shows it, and so does the dashboard of a batch with any quota-failed document.
 
+### S-17 UI on the shadcn/ui dashboard-01 template
+- **AC-17.1** [R-19] App shell (sidebar + header) and the batch dashboard use the template's components: KPI cards, a "Holds by reason" chart, a Safe vs Hold chart, and its data-table pattern with filters, search, sticky header and row hover. Content width up to about 1440px, base font 15px, status colours only for status. *(manual: screenshots at 1440px and 1280px)*
+- **AC-17.2** [R-19] Emails are master–detail: subcontractor list on the left, the rendered email on the right, with code-filled amounts and dates highlighted. "Edit" switches to the textarea. *(manual)*
+- **AC-17.3** [R-19] The chart data come from a pure function of the batch result: holds per rule id and the SAFE/HOLD counts, which match `expected.json` for the sample. The preview highlights exactly the amounts and dates that code filled in.
+- **AC-17.4** [R-19] All existing tests stay green, and lint, typecheck and build pass. Passcode behaviour is unchanged (AC-14.1 tests). The template's licence is recorded in `docs/decisions/0008-ui-template.md`.
+
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
 - `Project(code, name, state, ownerName)`
@@ -230,26 +237,28 @@ _File lists updated 2026-11-25 after the first check report to match where the c
 | S-14 | Open sample data; passcode for uploads, edit and send | AC-14.1–14.3 | S-11, S-13 | `src/server/{guard,access}.ts`, `src/app/api/**`, `tests/unit/security.test.ts` |
 | S-15 | Frontend redesign | AC-15.1–15.2 | S-13, S-14 | `src/app/**`, `src/components/**`, `src/view/rule-labels.ts`, `src/server/batches.ts` (read-only `getDocumentReadings` for the payment page), `scripts/screenshots.ts`, `docs/screenshots/**`, `package.json` |
 | S-16 | Honest sample note; AI-quota message | AC-16.1–16.3 | S-12, S-15 | `src/view/copy.ts`, `src/ai/{extractor,gemini-extractor}.ts`, `src/server/batches.ts`, `src/app/api/batches/[id]/documents/[docId]/extract/route.ts`, `src/app/_components/processing.tsx`, `src/app/batches/[id]/page.tsx`, `README.md` |
+| S-17 | UI on shadcn/ui dashboard-01 | AC-17.1–17.4 | S-15, S-16 | `src/components/**`, `src/app/**`, `src/lib/utils.ts`, `src/hooks/**`, `src/view/{charts,highlight}.ts`, `components.json`, `package.json`, `scripts/screenshots.ts`, `docs/screenshots/**`, `docs/decisions/0008-ui-template.md` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
 |---|---|---|---|
-| S-1 | Skeleton | — | awaiting-merge |
-| S-2 | Domain basics | S-1 | awaiting-merge |
-| S-3 | Spreadsheet ingest | S-2 | awaiting-merge |
-| S-4 | Sample data | S-2 | awaiting-merge |
-| S-5 | Extraction | S-2 | awaiting-merge |
-| S-6 | Matching | S-2, S-5 | awaiting-merge |
-| S-7 | Rules, exposure, decision | S-6 | awaiting-merge |
-| S-8 | Pipeline + E2E | S-3, S-4, S-7 | awaiting-merge |
-| S-9 | DB, API, screens | S-8 | awaiting-merge |
-| S-10 | Email drafts and send | S-7, S-9 | awaiting-merge |
-| S-11 | Security, health, deploy, README | S-9, S-10 | awaiting-merge |
-| S-12 | Gemini provider | S-5, S-10 | awaiting-merge |
-| S-13 | Deterministic sample, no stuck batches | S-9, S-12 | awaiting-merge |
-| S-14 | Open sample data | S-11, S-13 | awaiting-merge |
-| S-15 | Frontend redesign | S-13, S-14 | awaiting-merge |
-| S-16 | Honest sample note; AI-quota message | S-12, S-15 | awaiting-merge |
+| S-1 | Skeleton | — | merged |
+| S-2 | Domain basics | S-1 | merged |
+| S-3 | Spreadsheet ingest | S-2 | merged |
+| S-4 | Sample data | S-2 | merged |
+| S-5 | Extraction | S-2 | merged |
+| S-6 | Matching | S-2, S-5 | merged |
+| S-7 | Rules, exposure, decision | S-6 | merged |
+| S-8 | Pipeline + E2E | S-3, S-4, S-7 | merged |
+| S-9 | DB, API, screens | S-8 | merged |
+| S-10 | Email drafts and send | S-7, S-9 | merged |
+| S-11 | Security, health, deploy, README | S-9, S-10 | merged |
+| S-12 | Gemini provider | S-5, S-10 | merged |
+| S-13 | Deterministic sample, no stuck batches | S-9, S-12 | merged |
+| S-14 | Open sample data | S-11, S-13 | merged |
+| S-15 | Frontend redesign | S-13, S-14 | merged |
+| S-16 | Honest sample note; AI-quota message | S-12, S-15 | merged |
+| S-17 | UI on shadcn/ui dashboard-01 | S-15, S-16 | checking |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:

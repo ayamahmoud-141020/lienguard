@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { Inter } from "next/font/google";
-import { Toaster } from "sonner";
-import { Sidebar } from "@/components/app/sidebar";
-import { DemoAccess } from "@/components/app/demo-access";
-import { TooltipProvider } from "@/components/ui/primitives";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -13,23 +15,21 @@ export const metadata: Metadata = {
   description: "Know which subcontractor payments are safe before you pay.",
 };
 
+// App shell from shadcn/ui dashboard-01 (MIT): inset sidebar + sticky header.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen font-sans antialiased">
         <TooltipProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-line bg-surface/90 px-8 backdrop-blur">
-                <p className="text-[13px] text-muted">Subcontractor payments: lien waivers and insurance, checked before you pay.</p>
-                <DemoAccess />
-              </header>
-              <main className="mx-auto w-full max-w-[1240px] flex-1 px-8 py-7">{children}</main>
-            </div>
-          </div>
+          <SidebarProvider style={{ "--sidebar-width": "15rem", "--header-height": "3.5rem" } as CSSProperties}>
+            <AppSidebar variant="inset" />
+            <SidebarInset>
+              <SiteHeader />
+              <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 lg:px-6">{children}</main>
+            </SidebarInset>
+          </SidebarProvider>
         </TooltipProvider>
-        <Toaster position="top-center" offset={64} toastOptions={{ className: "!rounded-[8px] !border-line !text-[13px]" }} />
+        <Toaster position="top-center" offset={64} />
       </body>
     </html>
   );

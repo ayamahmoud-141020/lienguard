@@ -4,9 +4,9 @@ import { Lock, LockOpen } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { getIdentity, onIdentityChange, PASSCODE_NOTE, setIdentity } from "@/app/_components/client-api";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/cn";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/primitives";
+import { Button } from "@/components/app/button";
+import { cn } from "@/components/app/cn";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/app/primitives";
 
 /** True once a passcode is entered in this tab. The server still checks it on every protected action. */
 export function useUnlocked(): boolean {
@@ -24,14 +24,14 @@ export function PasscodeNote({ className }: { className?: string }) {
   const unlocked = useUnlocked();
   if (unlocked) return null;
   return (
-    <p className={cn("flex items-center gap-1 text-xs text-muted", className)}>
+    <p className={cn("flex items-center gap-1 text-xs text-muted-foreground", className)}>
       <Lock aria-hidden className="size-3" />
       {PASSCODE_NOTE}
     </p>
   );
 }
 
-const field = "mt-1 block h-9 w-full rounded-[6px] border border-line-strong bg-surface px-2.5 text-sm text-ink placeholder:text-muted";
+const field = "mt-1 block h-9 w-full rounded-[6px] border border-line-strong bg-surface px-2.5 text-sm text-ink placeholder:text-muted-foreground";
 
 export function DemoAccess({ trigger }: { trigger?: ReactNode }) {
   const unlocked = useUnlocked();
@@ -73,10 +73,10 @@ export function DemoAccess({ trigger }: { trigger?: ReactNode }) {
           }}
         >
           <div className="flex items-center gap-2">
-            {unlocked ? <LockOpen aria-hidden className="size-4 text-brand" /> : <Lock aria-hidden className="size-4 text-muted" />}
+            {unlocked ? <LockOpen aria-hidden className="size-4 text-brand" /> : <Lock aria-hidden className="size-4 text-muted-foreground" />}
             <h2 className="text-sm font-semibold">{unlocked ? "Unlocked" : "Locked"}</h2>
           </div>
-          <p className="mt-1 text-[13px] text-muted">
+          <p className="mt-1 text-[13px] text-muted-foreground">
             Anyone can try the sample data. The passcode is only needed to upload your own files, edit drafts and send emails.
           </p>
           <label className="mt-3 block text-[13px] font-medium text-ink-2">
@@ -102,7 +102,7 @@ export function DemoAccess({ trigger }: { trigger?: ReactNode }) {
                 Lock again
               </Button>
             ) : (
-              <span className="text-xs text-muted">Kept for this tab only.</span>
+              <span className="text-xs text-muted-foreground">Kept for this tab only.</span>
             )}
             <Button type="submit" variant="primary" size="sm">
               Save

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBatchView } from "@/server/batches";
 import { listAudit } from "@/server/drafts";
-import { EmptyState, PageHeader, Panel } from "@/components/ui/layout";
+import { EmptyState, PageHeader, Panel } from "@/components/app/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -31,12 +31,12 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
   const batch = await getBatchView(id);
   if (!batch) notFound();
   const rows = await listAudit(id);
-  const th = "h-9 px-4 text-left text-xs font-medium text-muted";
+  const th = "h-9 px-4 text-left text-xs font-medium text-muted-foreground";
   return (
     <div>
       <PageHeader
         back={
-          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted hover:text-ink">
+          <Link href={`/batches/${id}`} className="inline-flex items-center gap-0.5 text-[13px] text-muted-foreground hover:text-ink">
             <ChevronLeft aria-hidden className="size-4" />
             {batch.name}
           </Link>
@@ -66,7 +66,7 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
                   <td className="num whitespace-nowrap px-4 text-ink-2">{r.at.toISOString().slice(0, 19).replace("T", " ")}</td>
                   <td className="px-4 font-medium text-ink">{labels[r.action] ?? r.action}</td>
                   <td className="px-4 text-ink-2">{r.subCode ?? "–"}</td>
-                  <td className="num px-4 text-muted">{details(r.detailsJson) || "–"}</td>
+                  <td className="num px-4 text-muted-foreground">{details(r.detailsJson) || "–"}</td>
                   <td className="px-4 text-ink-2">{r.actor}</td>
                 </tr>
               ))}

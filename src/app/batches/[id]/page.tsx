@@ -12,15 +12,17 @@ import { PaymentsTable } from "@/app/_components/payments-table";
 import { DraftEmailsButton } from "@/app/_components/drafts";
 import { KpiStrip } from "@/components/app/kpis";
 import { ExposureBars } from "@/components/app/exposure-bars";
-import { ButtonLink } from "@/components/ui/button";
-import { PageHeader, Panel, PanelHeader } from "@/components/ui/layout";
-import { BatchStatusBadge } from "@/components/ui/status";
+import { HoldsByReasonChart, SafeVsHoldChart } from "@/components/app/batch-charts";
+import { decisionSplit, holdsByReason } from "@/view/charts";
+import { ButtonLink } from "@/components/app/button";
+import { PageHeader, Panel, PanelHeader } from "@/components/app/layout";
+import { BatchStatusBadge } from "@/components/app/status";
 
 export const dynamic = "force-dynamic";
 
 function Back() {
   return (
-    <Link href="/" className="inline-flex items-center gap-0.5 text-[13px] text-muted hover:text-ink">
+    <Link href="/" className="inline-flex items-center gap-0.5 text-[13px] text-muted-foreground hover:text-ink">
       <ChevronLeft aria-hidden className="size-4" />
       Batches
     </Link>
@@ -64,7 +66,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const projects = d.byProject.map((p) => ({ ...p, hold: d.rows.filter((r) => r.projectCode === p.code && r.decision === "HOLD").length }));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         back={<Back />}
         title={batch.name}
@@ -81,13 +83,13 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
       />
 
       {batch.kind === "sample" ? (
-        <p className="flex gap-2 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-2.5 text-[13px] text-ink-2">
-          <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
+        <p className="flex gap-2 rounded-xl border bg-card px-4 py-2.5 text-sm text-ink-2">
+          <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           {SAMPLE_NOTE}
         </p>
       ) : null}
       {batch.notice ? (
-        <p role="status" className="flex gap-2 rounded-[var(--radius-card)] border border-warn-line bg-warn-bg px-4 py-2.5 text-[13px] font-medium text-warn">
+        <p role="status" className="flex gap-2 rounded-xl border border-warn-line bg-warn-bg px-4 py-2.5 text-sm font-medium text-warn">
           <AlertTriangle aria-hidden className="mt-0.5 size-4 shrink-0" />
           {batch.notice}
         </p>
@@ -103,12 +105,26 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
         total={d.rows.length}
       />
 
-      <Panel>
-        <PanelHeader title="Exposed by project" description={`${formatMoney(d.exposedCents)} at risk across ${projects.length} projects`} />
-        <div className="px-4 py-4">
-          <ExposureBars projects={projects} totalCents={d.exposedCents} />
-        </div>
-      </Panel>
+      <div className="grid grid-cols-3 items-stretch gap-4">
+        <Panel>
+          <PanelHeader title="Holds by reason" description="Payments on hold, per failed rule" />
+          <div className="px-3 py-3">
+            <HoldsByReasonChart data={holdsByReason(batch.result)} />
+          </div>
+        </Panel>
+        <Panel>
+          <PanelHeader title="Safe vs Hold" description={`${d.rows.length} payments in this batch`} />
+          <div className="px-5 py-5">
+            <SafeVsHoldChart {...decisionSplit(batch.result)} />
+          </div>
+        </Panel>
+        <Panel>
+          <PanelHeader title="Exposed by project" description={`${formatMoney(d.exposedCents)} at risk across ${projects.length} projects`} />
+          <div className="px-5 py-5">
+            <ExposureBars projects={projects} totalCents={d.exposedCents} />
+          </div>
+        </Panel>
+      </div>
 
       {d.unmatched.length ? (
         <Panel>

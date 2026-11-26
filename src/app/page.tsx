@@ -4,7 +4,7 @@ import { formatMoney } from "@/domain/money";
 import { SampleButton, UploadPanel } from "./_components/new-batch";
 import { HowItWorks } from "@/components/app/how-it-works";
 import { BatchRows } from "@/components/app/batch-rows";
-import { EmptyState, Panel, PanelHeader } from "@/components/ui/layout";
+import { EmptyState, Panel, PanelHeader } from "@/components/app/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function Home() {
     <div className="space-y-5">
       <Panel className="px-6 py-5">
         <h1 className="text-[22px] font-semibold leading-7 tracking-[-0.01em]">Know which subcontractor payments are safe to release.</h1>
-        <p className="mt-1 max-w-[72ch] text-[13px] text-muted">
+        <p className="mt-1 max-w-[72ch] text-[13px] text-muted-foreground">
           Try it on a fictional November batch: 12 payments, 17 PDFs, including a blurry scan and a waiver that tries to trick the AI.
         </p>
         <div className="mt-4 flex flex-wrap items-start gap-3">
