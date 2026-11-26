@@ -6,7 +6,7 @@ const Base = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().default("claude-opus-5-5"),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default("gemini-4-hydrogen"),
+  GEMINI_MODEL: z.string().default("gemini-3.5-flash-lite"),
   GEMINI_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("LienGuard Demo <onboarding@resend.dev>"),

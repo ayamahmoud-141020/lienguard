@@ -20,7 +20,7 @@ import { normalizeName } from "@/domain/matching/normalize";
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 const key = process.env.GEMINI_API_KEY;
-const model = process.env.GEMINI_MODEL || "gemini-4-hydrogen";
+const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 const batchArg = process.argv.indexOf("--batch");
 const batchId = batchArg > 0 ? process.argv[batchArg + 1] : undefined;
 if (!key && !batchId) {
