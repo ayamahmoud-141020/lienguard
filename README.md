@@ -6,6 +6,8 @@ LienGuard takes the payments spreadsheet and the PDFs that arrived. For every pa
 
 > **Live demo: https://lienguard-one.vercel.app**. Click **Use sample data**; no passcode is needed. Sample data uses hand-checked readings, so results are the same every time. Live runs of Claude (claude-opus-5-5) and Gemini each matched them on 105 of 106 fields. Upload your own PDFs to see live extraction. Uploading your own files, editing drafts and sending emails need the demo passcode, which is shared privately (Demo access, top right). Demo emails are redirected to one inbox.
 
+**Full documentation:** [docs/README.md](docs/README.md): overview, how it was built, every story, architecture, decisions, what the process caught, quality and security, run and deploy, limits.
+
 **Contents:** [Tour](#a-guided-tour) · [System flows](#system-flows-step-by-step) · [How it works](#how-it-works) · [Rules](#the-rules) · [Where AI is used](#where-ai-is-used-and-where-it-isnt) · [Automation](#automation-the-loop-runs-on-its-own) · [Live results](#live-results-2026-11-26) · [How it was built](#how-it-was-built) · [Code map](#code-map) · [Run locally](#run-locally) · [Limitations](#limitations-and-next-steps)
 
 ---
@@ -188,7 +190,7 @@ An earlier run with **Gemini** (`gemini-3.5-flash-lite`, free tier) also matched
 I built LienGuard with **Claude Code**, using a small "software factory" I set up for working with AI agents in a disciplined way:
 
 - **Spec before code:** [`docs/features/001-lienguard.md`](docs/features/001-lienguard.md) holds 21 requirements, 97 acceptance criteria and 21 stories, each with its stage (`draft → agreed → coding → checking → awaiting-merge → merged`). A human approved the spec (**Gate A**) before any product code was written.
-- **Test first:** every story started with failing tests named after their acceptance criteria (e.g. `AC-7.12 R02 + R04 on one payment → exposure is the max, not the sum`), then the minimal code, then one commit per story (`story(S-n): …`). There are **123 tests**, with no network.
+- **Test first:** every story started with failing tests named after their acceptance criteria (e.g. `AC-7.12 R02 + R04 on one payment → exposure is the max, not the sum`), then the minimal code, then one commit per story (`story(S-n): …`). The tests need no network; the count per story is in [docs/02-specs-index.md](docs/02-specs-index.md).
 - **An answer key written by hand:** [`samples/EXPECTED.md`](samples/EXPECTED.md) lists the expected decision for all 12 sample payments. The end-to-end test runs the whole pipeline on the samples and must match it exactly.
 - **Independent auditor:** a separate agent ([`.claude/agents/auditor.md`](.claude/agents/auditor.md)) that never sees the builder's reasoning reruns lint, typecheck and tests, and maps every acceptance criterion to a test. Its reports are in [`docs/checks/`](docs/checks/); every round that found a problem was fixed before merge.
 - **Two human gates:** a person approves the spec, and a person reviews and merges every PR. The AI never approves or merges.
@@ -224,7 +226,7 @@ pnpm install
 cp .env.example .env.local      # fill in DATABASE_URL, DIRECT_URL, keys, DEMO_PASSCODE
 pnpm prisma migrate deploy      # needs DATABASE_URL / DIRECT_URL in the shell env (Prisma reads .env, not .env.local)
 pnpm dev                        # http://localhost:3000 → "Use sample data"
-pnpm test                       # 123 tests, no network
+pnpm test                       # all tests, no network
 ```
 
 Set `LIENGUARD_AI=fixture` and `LIENGUARD_EMAIL=fake` to run the whole app with no API keys: PDFs are "read" from the recorded fixtures and emails are only recorded.

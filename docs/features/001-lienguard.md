@@ -333,10 +333,10 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-19 | Daily automation | S-18 | merged |
 | S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
 | S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
-| S-22 | System flows: data and drift tests | S-21 | awaiting-merge |
-| S-23 | System flows page | S-22 | awaiting-merge |
+| S-22 | System flows: data and drift tests | S-21 | merged |
+| S-23 | System flows page | S-22 | merged |
 | S-24 | AI values must appear in the PDF's own text | S-22 | awaiting-merge |
-| S-25 | Project documentation | S-24 | agreed |
+| S-25 | Project documentation | S-24 | checking |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
