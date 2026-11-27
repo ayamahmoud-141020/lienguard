@@ -53,6 +53,8 @@ The app fails at start if the chosen AI's key is missing, and the error names th
 ## Deploy
 
 The live app runs on Vercel at https://lienguard-one.vercel.app.
+- **How it updates.** Since 2026-11-27 the Vercel project is connected to the GitHub repo. A merge to `main` deploys to production, and each pull request gets a preview deployment, shown as a check on the PR. Before that, deploys were made by hand with the Vercel CLI, and merges did not reach production on their own. See [05-what-the-process-caught.md](05-what-the-process-caught.md), item 27.
+- **Check after a merge.** The `/flows` page footer names the commit the build came from ("Traced from lienguard main @ …"). Compare it with the merge commit.
 - Vercel runs the `vercel-build` script: `prisma generate && prisma migrate deploy && next build` ([`package.json`](../package.json)). So database migrations in [`prisma/migrations/`](../prisma/migrations/) are applied on each deploy.
 - The daily cron is set in [`vercel.json`](../vercel.json): `/api/cron/daily` at 07:00 UTC.
 - The database is Neon Postgres ([ADR-0006](decisions/0006-postgres-neon.md)).
