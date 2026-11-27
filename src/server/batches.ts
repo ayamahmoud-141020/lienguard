@@ -8,6 +8,7 @@ import { AnthropicExtractor } from "@/ai/anthropic-extractor";
 import { GeminiExtractor } from "@/ai/gemini-extractor";
 import { Extraction } from "@/ai/schemas";
 import type { ExtractOutcome, Extractor } from "@/ai/extractor";
+import { GroundedExtractor } from "@/ai/grounded-extractor";
 import { evaluateBatch, type BatchInput, type BatchResult, type ExtractedDocument } from "@/pipeline/evaluate";
 import { loadFixtureExtractor, readBatchSpreadsheets } from "@/pipeline/samples";
 import { dedupeDocuments } from "@/pipeline/documents";
@@ -99,7 +100,8 @@ const MAX_SAMPLE_BATCHES = 20;
 export async function createSampleBatch(store: BatchStore = prismaBatchStore, samplesDir: string = SAMPLES_DIR, today: string = loadEnv().DEMO_TODAY): Promise<string> {
   const { input, errors } = readBatchSpreadsheets(readFileSync(join(samplesDir, "payments.xlsx")), readFileSync(join(samplesDir, "subcontractors.xlsx")));
   if (errors.length) throw new Error("sample spreadsheets are invalid");
-  const recorded = loadFixtureExtractor(samplesDir);
+  // Recorded readings are checked against the PDF text like live ones (R-23).
+  const recorded = new GroundedExtractor(loadFixtureExtractor(samplesDir));
   const count = await store.countBatches("sample");
   const batchId = await store.createBatch({ name: `Sample batch #${count + 1} · November payments`, today, kind: "sample", input });
   const files = readdirSync(join(samplesDir, "pdfs"))
@@ -138,7 +140,9 @@ export async function addDocument(batchId: string, fileName: string, bytes: Uint
 export async function extractDocument(batchId: string, documentId: string): Promise<{ status: "done" | "needs review"; outcome: ExtractOutcome }> {
   const doc = await prisma.document.findFirst({ where: { id: documentId, batchId } });
   if (!doc) throw new Error("document not found");
-  const read = await readDocument(() => cachedExtract(getExtractor(), dbCache, { bytes: new Uint8Array(doc.bytes), fileName: doc.fileName }), { documentId: doc.id, fileName: doc.fileName });
+  // Checked against the PDF text after the cache, so older cached readings are checked too (R-23).
+  const reader = new GroundedExtractor({ extract: (i) => cachedExtract(getExtractor(), dbCache, i) });
+  const read = await readDocument(() => reader.extract({ bytes: new Uint8Array(doc.bytes), fileName: doc.fileName }), { documentId: doc.id, fileName: doc.fileName });
   await prisma.document.update({ where: { id: doc.id }, data: { extractionJson: json(read.outcome), status: read.status } });
   await prisma.batch.update({ where: { id: batchId }, data: { updatedAt: new Date() } });
   return { status: read.status === "done" ? "done" : "needs review", outcome: read.outcome };

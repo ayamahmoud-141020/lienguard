@@ -229,7 +229,7 @@ Base case for each AC unless it says otherwise:
 - **AC-24.3** [R-23] Waiver type and scope are found as whole words: "conditional" is not found inside "unconditional". "progress" is also found as "partial", since the extraction prompt maps a partial waiver to `progress`.
 - **AC-24.4** [R-23] Sentences addressed to AI systems are not the document's own text. On the injection sample, `$14,000.00` and "conditional" are found, but `$1,000,000.00` and "unconditional" are not.
 - **AC-24.5** [R-23] A fake extractor that obeys the injection (unconditional, `$1,000,000.00`, signed, notarized) runs through the real pipeline on the samples. PAY-12 stays HOLD with R12, and the injection document needs review.
-- **AC-24.6** [R-23] Every recorded sample reading (11 waivers, 6 COIs, the inbound reply) passes the check unchanged. The sample batch still equals `expected.json`: 2 SAFE, 10 HOLD, $162,500 exposed, and PAY-12 an R03 HOLD for $14,000.
+- **AC-24.6** [R-23] Every recorded sample reading (11 waivers, 6 COIs, the inbound reply) passes the check unchanged, except one value: the blurry scan's amount. That scan's PDF text reads `$11,0_`, so the recorded guess `$11,000.00` (confidence 0.42) is not found. That document was already in needs review, so every document keeps its needs-review status. *(Corrected while building on 2026-11-27: the first wording said every reading was unchanged.)* The sample batch still equals `expected.json`: 2 SAFE, 10 HOLD, $162,500 exposed, and PAY-12 an R03 HOLD for $14,000.
 - **AC-24.7** [R-23] Every way a PDF gets read goes through the check, after the extraction cache, so old cached readings are checked too. That covers `runBatch`, sample batches, the per-PDF extract route, and inbound documents.
 - **AC-24.8** [R-23] The injection flow on `/flows` has a step for this check that names `src/ai/grounding.ts` (`groundExtraction`), and its payload shows `$1,000,000.00` not found. The R-22 drift tests (AC-22.2, AC-22.3) cover it.
 
@@ -325,7 +325,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
 | S-22 | System flows: data and drift tests | S-21 | awaiting-merge |
 | S-23 | System flows page | S-22 | awaiting-merge (AC-23.7 needs sign-off) |
-| S-24 | AI values must appear in the PDF's own text | S-22 | agreed |
+| S-24 | AI values must appear in the PDF's own text | S-22 | checking |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
