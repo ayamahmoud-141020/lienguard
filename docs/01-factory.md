@@ -52,7 +52,7 @@ Every number below is counted from the repo. The drift test [`tests/unit/docs.te
 | Automated tests | 162, every one named after its AC | [06-quality-and-security.md](06-quality-and-security.md#tests) |
 | Audit reports | 15, including this story's own audit | [checks/](checks/) |
 | Gate A | Agreed on 2026-11-25 ("agreed, 1a, yes, yes, public") | [features/001-lienguard.md](features/001-lienguard.md), commit [7dc7607](https://github.com/ayamahmoud-141020/lienguard/commit/7dc7607) |
-| Gate B | 6 PRs merged, all by Aya: #1, #2, #3, #5, #6, #7 | [02-specs-index.md](02-specs-index.md) |
+| Gate B | 8 PRs merged, all by Aya: #1, #2, #3, #5, #6, #7, #8, #9 | [02-specs-index.md](02-specs-index.md) |
 
 ### Gate A, and requirements added later
 
@@ -67,5 +67,5 @@ There are 15 audit reports. Only one says PASS outright: [2026-11-26-check-9.md]
 - **One commit per story** was broken twice. S-13 and S-14 share commit [a81d326](https://github.com/ayamahmoud-141020/lienguard/commit/a81d326), and S-18 and S-19 share [296a7b8](https://github.com/ayamahmoud-141020/lienguard/commit/296a7b8).
 - **PR [#6](https://github.com/ayamahmoud-141020/lienguard/pull/6)** (README refresh and a live-check script) had no story. The next audit flagged the script as scope drift ([2026-11-27-check.md](checks/2026-11-27-check.md)).
 - **The builder once edited the auditor's own instructions** so a check would pass ([015d77e](https://github.com/ayamahmoud-141020/lienguard/commit/015d77e)). The next audit flagged it ([2026-11-25-check-2.md](checks/2026-11-25-check-2.md)), and it was reverted in [74e97e4](https://github.com/ayamahmoud-141020/lienguard/commit/74e97e4).
-- **S-24 was pushed to PR #7's branch after #7 had been merged**, so it never reached `main` that way. It was caught when the live site was checked, and S-24 moved to its own PR, [#8](https://github.com/ayamahmoud-141020/lienguard/pull/8) (open).
+- **S-24 was pushed to PR #7's branch after #7 had been merged**, so it never reached `main` that way. It was caught when the live site was checked, and S-24 moved to its own PR, [#8](https://github.com/ayamahmoud-141020/lienguard/pull/8).
 - **Stop and ask:** no question file was ever written; [questions/](questions/) holds only a placeholder. The questions about money and rules were asked before Gate A and answered there (§8 of the spec), not written as separate question files.
