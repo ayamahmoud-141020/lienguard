@@ -325,7 +325,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
 | S-22 | System flows: data and drift tests | S-21 | awaiting-merge |
 | S-23 | System flows page | S-22 | awaiting-merge (AC-23.7 needs sign-off) |
-| S-24 | AI values must appear in the PDF's own text | S-22 | checking |
+| S-24 | AI values must appear in the PDF's own text | S-22 | checking (amended AC-24.6 needs Aya's sign-off) |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
