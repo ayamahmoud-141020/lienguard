@@ -48,11 +48,11 @@ Every number below is counted from the repo. The drift test [`tests/unit/docs.te
 | Requirements | 24 (R-1 to R-24) | [features/001-lienguard.md §4](features/001-lienguard.md#4-requirements) |
 | Stories | 25 (S-1 to S-25) | [02-specs-index.md](02-specs-index.md) |
 | Acceptance criteria | 121 | [02-specs-index.md](02-specs-index.md) |
-| Sign-offs by Aya | 12: 11 ACs that a test can't fully cover (manual checks, or the build checked by CI) and 1 AC amended while building (AC-24.6). AC-25.5, for these docs, is still open. | [features/001-lienguard.md §11](features/001-lienguard.md#11-sign-off-on-items-without-an-automated-test-2026-11-26-aya-in-chat) |
+| Sign-offs by Aya | 13: 12 ACs that a test can't fully cover (manual checks, or the build checked by CI) and 1 AC amended while building (AC-24.6) | [features/001-lienguard.md §11](features/001-lienguard.md#11-sign-off-on-items-without-an-automated-test-2026-11-26-aya-in-chat) |
 | Automated tests | 162, every one named after its AC | [06-quality-and-security.md](06-quality-and-security.md#tests) |
 | Audit reports | 15, including this story's own audit | [checks/](checks/) |
 | Gate A | Agreed on 2026-11-25 ("agreed, 1a, yes, yes, public") | [features/001-lienguard.md](features/001-lienguard.md), commit [7dc7607](https://github.com/ayamahmoud-141020/lienguard/commit/7dc7607) |
-| Gate B | 8 PRs merged, all by Aya: #1, #2, #3, #5, #6, #7, #8, #9 | [02-specs-index.md](02-specs-index.md) |
+| Gate B | 9 PRs merged, all by Aya: #1, #2, #3, #5, #6, #7, #8, #9, #10 | [02-specs-index.md](02-specs-index.md) |
 
 ### Gate A, and requirements added later
 

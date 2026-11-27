@@ -336,7 +336,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-22 | System flows: data and drift tests | S-21 | merged |
 | S-23 | System flows page | S-22 | merged |
 | S-24 | AI values must appear in the PDF's own text | S-22 | merged |
-| S-25 | Project documentation | S-24 | merged (AC-25.5 not yet signed off) |
+| S-25 | Project documentation | S-24 | merged |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
@@ -364,3 +364,7 @@ After check round `docs/checks/2026-11-26-check-8.md` (every automated AC valid;
 After check rounds `docs/checks/2026-11-27-check-2.md` (S-22, S-23) and `docs/checks/2026-11-27-check-3.md` (S-24), Aya accepted:
 - **AC-23.7**: manual. Layout at 1280px and 1440px, keyboard reach and focus ring (screenshot 15).
 - **AC-24.6**: the wording amended while building. Every recorded reading passes unchanged except the blurry scan's guessed amount, whose document was already in needs review.
+
+### Sign-off for S-25 (2026-11-27, Aya, in chat)
+After check round `docs/checks/2026-11-27-check-4.md` (AC-25.1 to AC-25.4 valid and passing), Aya accepted:
+- **AC-25.5**: manual. The documentation in `docs/` is plain English, every claim is sourced, and it names nothing from her employer.
