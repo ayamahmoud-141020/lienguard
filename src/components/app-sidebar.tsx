@@ -1,7 +1,7 @@
 "use client";
 
 // Adapted from shadcn/ui dashboard-01 (MIT): same Sidebar structure, LienGuard navigation.
-import { BookOpen, FileClock, LayoutGrid, Mail, ShieldCheck } from "lucide-react";
+import { BookOpen, FileClock, LayoutGrid, Mail, ShieldCheck, Workflow } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
@@ -76,6 +76,14 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
                   <Link href="/about">
                     <BookOpen aria-hidden />
                     <span>How it works</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={path === "/flows"}>
+                  <Link href="/flows">
+                    <Workflow aria-hidden />
+                    <span>System flows</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Workflow } from "lucide-react";
 import { HowItWorks } from "@/components/app/how-it-works";
 import { PageHeader, Panel, PanelHeader } from "@/components/app/layout";
 import { RULE_NAMES } from "@/domain/rules";
@@ -30,6 +32,15 @@ export default function AboutPage() {
       <PageHeader
         title="How it works"
         description="LienGuard checks each subcontractor payment against the lien waivers and insurance certificates on file, and says whether it is safe to pay or should be held."
+        actions={
+          <Link
+            href="/flows"
+            className="inline-flex h-9 items-center gap-2 rounded-md border bg-card px-3 text-sm font-medium text-foreground shadow-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Workflow aria-hidden className="size-4" />
+            See the system flows, step by step
+          </Link>
+        }
       />
       <HowItWorks />
       <div className="grid grid-cols-2 items-start gap-5">

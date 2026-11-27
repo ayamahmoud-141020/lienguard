@@ -167,6 +167,14 @@ async function main() {
   await page.goto(`${BASE}/about`);
   await shot(page, "14-how-it-works");
 
+  // System flows (S-23): the inbound flow, paused on the step where PAY-02 flips to SAFE.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(`${BASE}/flows`);
+  await page.keyboard.press("4");
+  for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowRight");
+  await shot(page, "15-system-flows", false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
   await browser.close();
 }
 

@@ -6,7 +6,7 @@ LienGuard takes the payments spreadsheet and the PDFs that arrived. For every pa
 
 > **Live demo: https://lienguard-one.vercel.app**. Click **Use sample data**; no passcode is needed. Sample data uses hand-checked readings, so results are the same every time. Live runs of Claude (claude-opus-5-5) and Gemini each matched them on 105 of 106 fields. Upload your own PDFs to see live extraction. Uploading your own files, editing drafts and sending emails need the demo passcode, which is shared privately (Demo access, top right). Demo emails are redirected to one inbox.
 
-**Contents:** [Tour](#a-guided-tour) · [How it works](#how-it-works) · [Rules](#the-rules) · [Where AI is used](#where-ai-is-used-and-where-it-isnt) · [Automation](#automation-the-loop-runs-on-its-own) · [Live results](#live-results-2026-11-26) · [How it was built](#how-it-was-built) · [Code map](#code-map) · [Run locally](#run-locally) · [Limitations](#limitations-and-next-steps)
+**Contents:** [Tour](#a-guided-tour) · [System flows](#system-flows-step-by-step) · [How it works](#how-it-works) · [Rules](#the-rules) · [Where AI is used](#where-ai-is-used-and-where-it-isnt) · [Automation](#automation-the-loop-runs-on-its-own) · [Live results](#live-results-2026-11-26) · [How it was built](#how-it-was-built) · [Code map](#code-map) · [Run locally](#run-locally) · [Limitations](#limitations-and-next-steps)
 
 ---
 
@@ -81,6 +81,12 @@ Approve, then send. Sending goes through Resend with an idempotency key, and eve
 The **How it works** page explains the same thing in plain words for a reviewer:
 
 ![How it works page](docs/screenshots/14-how-it-works.png)
+
+### System flows, step by step
+
+**[/flows](https://lienguard-one.vercel.app/flows)** plays six flows through LienGuard's components: sample batch, upload and live AI, follow-up emails, inbound document, daily automation and prompt injection. A packet moves along each edge with an example payload from the sample data. Every step names the file and function that does the work. Play it, step with ← →, or switch flows with 1–6. The flow data lives in one typed file (`src/flows/flows.ts`). A test fails if any file it names moves, a function is renamed, or a payload or outcome stops matching the samples.
+
+![System flows page](docs/screenshots/15-system-flows.png)
 
 ---
 
@@ -192,7 +198,7 @@ I built LienGuard with **Claude Code**, using a small "software factory" I set u
 ## Code map
 
 ```
-src/domain/      pure logic: money (cents), dates (ISO), name matching, rules R01–R12, exposure, decision
+src/domain/      pure logic: money (cents), dates (ISO), name matching, rules R01–R07, R09, R12, exposure, decision
 src/ai/          Extractor interface; Claude, Gemini and fixture versions; prompts, schemas, cache
 src/email/       EmailWriter (Claude, Gemini, recorded, fixture), placeholders, post-check, Resend sender
 src/ingest/      spreadsheets → typed rows (SheetJS + Zod)
@@ -200,6 +206,7 @@ src/pipeline/    ingest → extract → match → rules; batch lifecycle (never 
 src/automation/  inbound documents, daily check, reminders, digest, decision diffs
 src/server/      access rules (passcode / secrets), Prisma stores, routes' server logic
 src/app/         Next.js pages and API routes
+src/flows/       the /flows page: nodes, flows, player (pure, tested against the repo and samples)
 config/          states.json, rules.json (demo defaults)
 samples/         fictional batch: spreadsheets, PDFs, hand-checked fixtures, recorded email wording, expected.json
 scripts/         generate-samples, smoke-ai, record-sample-drafts, live-upload-check, screenshots
