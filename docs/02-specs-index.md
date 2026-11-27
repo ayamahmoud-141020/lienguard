@@ -29,8 +29,8 @@ All stories belong to one feature: [features/001-lienguard.md](features/001-lien
 | [S-21](#s-21-sample-emails-ready-at-once) | Sample emails ready at once | Sample batches open with their emails drafted, at no AI cost | 4 | 6 | 1 round; [PASS](checks/2026-11-26-check-9.md) | [#5](https://github.com/ayamahmoud-141020/lienguard/pull/5) | merged |
 | [S-22](#s-22-system-flows-data-and-drift-tests) | System flows: data and drift tests | One typed file of system flows, tested against the repo | 4 | 9 | 2 rounds; all ACs valid | [#7](https://github.com/ayamahmoud-141020/lienguard/pull/7) | merged |
 | [S-23](#s-23-system-flows-page) | System flows page | Play the flows step by step at `/flows` | 7 | 12 | 2 rounds; last [FAIL, manual only](checks/2026-11-27-check-2.md); AC-23.7 signed off | [#7](https://github.com/ayamahmoud-141020/lienguard/pull/7) | merged |
-| [S-24](#s-24-ai-values-must-appear-in-the-pdfs-own-text) | AI values must appear in the PDF's own text | Code catches an AI value that the PDF does not contain | 8 | 13 | 1 round; [FAIL, amended AC](checks/2026-11-27-check-3.md); AC-24.6 signed off | [#8](https://github.com/ayamahmoud-141020/lienguard/pull/8) (open) | awaiting-merge |
-| [S-25](#s-25-project-documentation) | Project documentation | These pages, tested against the repo | 5 | 5 | 1 round; [FAIL, manual only](checks/2026-11-27-check-4.md); AC-25.5 needs Aya's review | this PR | checking |
+| [S-24](#s-24-ai-values-must-appear-in-the-pdfs-own-text) | AI values must appear in the PDF's own text | Code catches an AI value that the PDF does not contain | 8 | 13 | 1 round; [FAIL, amended AC](checks/2026-11-27-check-3.md); AC-24.6 signed off | [#8](https://github.com/ayamahmoud-141020/lienguard/pull/8) | merged |
+| [S-25](#s-25-project-documentation) | Project documentation | These pages, tested against the repo | 5 | 5 | 1 round; [FAIL, manual only](checks/2026-11-27-check-4.md); AC-25.5 needs Aya's review | [#9](https://github.com/ayamahmoud-141020/lienguard/pull/9) | merged (AC-25.5 not yet signed off) |
 | **Total** | | | **121** | **162** | | | |
 
 ---
