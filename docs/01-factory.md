@@ -50,7 +50,7 @@ Every number below is counted from the repo. The drift test [`tests/unit/docs.te
 | Acceptance criteria | 121 | [02-specs-index.md](02-specs-index.md) |
 | Sign-offs by Aya | 12: 11 ACs that a test can't fully cover (manual checks, or the build checked by CI) and 1 AC amended while building (AC-24.6). AC-25.5, for these docs, is still open. | [features/001-lienguard.md §11](features/001-lienguard.md#11-sign-off-on-items-without-an-automated-test-2026-11-26-aya-in-chat) |
 | Automated tests | 162, every one named after its AC | [06-quality-and-security.md](06-quality-and-security.md#tests) |
-| Audit reports | 14 before this story's own audit | [checks/](checks/) |
+| Audit reports | 15, including this story's own audit | [checks/](checks/) |
 | Gate A | Agreed on 2026-11-25 ("agreed, 1a, yes, yes, public") | [features/001-lienguard.md](features/001-lienguard.md), commit [7dc7607](https://github.com/ayamahmoud-141020/lienguard/commit/7dc7607) |
 | Gate B | 6 PRs merged, all by Aya: #1, #2, #3, #5, #6, #7 | [02-specs-index.md](02-specs-index.md) |
 
@@ -60,7 +60,7 @@ The first spec answered four open questions at Gate A, for example "R12 exposure
 
 ### The audits
 
-There were 14 audit reports before this story. Only one says PASS outright: [2026-11-26-check-9.md](checks/2026-11-26-check-9.md), for S-21. The others say FAIL. In every case the last FAIL was down to ACs that code cannot test (a layout, a README section, a live AI run), and Aya signed those off in the spec. What the audits found is listed in [05-what-the-process-caught.md](05-what-the-process-caught.md).
+There are 15 audit reports. Only one says PASS outright: [2026-11-26-check-9.md](checks/2026-11-26-check-9.md), for S-21. The others say FAIL. In every case the last FAIL was down to ACs that code cannot test (a layout, a README section, a live AI run), and Aya signed those off in the spec. What the audits found is listed in [05-what-the-process-caught.md](05-what-the-process-caught.md).
 
 ### Where the process was not followed exactly
 

@@ -94,7 +94,7 @@ describe("S-25 project documentation", () => {
     expect(unknown).toEqual([]);
     const merged = new Set([...git("log", "--format=%s", "HEAD").matchAll(/^Merge pull request #(\d+)/gm)].map((m) => Number(m[1])));
     const wrong = prLines.filter(({ n, line }) => {
-      const markedOpen = new RegExp(`pull/${n}\\)?[^|]*\\(open\\)`).test(line);
+      const markedOpen = new RegExp(`pull/${n}(?!\\d)\\)?[^|]*\\(open\\)`).test(line);
       return merged.has(n) ? markedOpen : !markedOpen;
     });
     expect(wrong.map((w) => `#${w.n}: ${w.line.slice(0, 120)}`)).toEqual([]);
