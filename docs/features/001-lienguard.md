@@ -324,8 +324,8 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
 | S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
 | S-22 | System flows: data and drift tests | S-21 | awaiting-merge |
-| S-23 | System flows page | S-22 | awaiting-merge (AC-23.7 needs sign-off) |
-| S-24 | AI values must appear in the PDF's own text | S-22 | checking (amended AC-24.6 needs Aya's sign-off) |
+| S-23 | System flows page | S-22 | awaiting-merge |
+| S-24 | AI values must appear in the PDF's own text | S-22 | awaiting-merge |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
@@ -348,3 +348,8 @@ After check round `docs/checks/2026-11-26-check-6.md` (all automated checks pass
 ### Sign-off for S-18 to S-20 (2026-11-26, Aya, in chat)
 After check round `docs/checks/2026-11-26-check-8.md` (every automated AC valid; the idempotency-key and 4 MB-cap assertions were then added), Aya accepted:
 - **AC-20.2**: manual. The automated loop is shown in the README and the home "How it works" strip (screenshot 13, now `docs/screenshots/archive/13-home.png`).
+
+### Sign-off for S-22 to S-24 (2026-11-27, Aya, in chat)
+After check rounds `docs/checks/2026-11-27-check-2.md` (S-22, S-23) and `docs/checks/2026-11-27-check-3.md` (S-24), Aya accepted:
+- **AC-23.7**: manual. Layout at 1280px and 1440px, keyboard reach and focus ring (screenshot 15).
+- **AC-24.6**: the wording amended while building. Every recorded reading passes unchanged except the blurry scan's guessed amount, whose document was already in needs review.
