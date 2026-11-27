@@ -623,6 +623,18 @@ export const FLOWS: Flow[] = [
       },
       {
         from: "extractor",
+        to: "extractor",
+        kind: "data",
+        payload: `"${$(F.pay12.amountCents)}" found ✓ · "$1,000,000.00" not found (only in the line to AI)`,
+        text: "Code checks every value against the PDF's own text, minus sentences addressed to AI; a value not found means needs review, so even an obeying model ends in a HOLD.",
+        files: [
+          { path: "src/ai/grounding.ts", symbol: "groundExtraction" },
+          { path: "src/ai/pdf-text.ts", symbol: "pdfText" },
+          { path: "src/ai/grounded-extractor.ts", symbol: "GroundedExtractor" },
+        ],
+      },
+      {
+        from: "extractor",
         to: "db",
         kind: "data",
         payload: `"${$(F.pay12.amountCents)}" → 1400000 cents, parsed by code`,
@@ -653,8 +665,8 @@ export const FLOWS: Flow[] = [
         to: "db",
         kind: "data",
         payload: `PAY-12: HOLD (R03) · pinned by test AC-8.3`,
-        text: "A test pins this outcome, so a change that obeys the injected text fails CI.",
-        files: [{ path: "tests/e2e/samples.test.ts" }],
+        text: "Tests pin this outcome, including one where a fake model obeys the injection, so a change that lets it through fails CI.",
+        files: [{ path: "tests/e2e/samples.test.ts" }, { path: "tests/unit/grounding.test.ts" }],
       },
       {
         from: "db",

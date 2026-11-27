@@ -52,7 +52,9 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-21** *(added 2026-11-26, Aya)* Sample batches open with their follow-up emails already drafted, using wording recorded once from live AI runs (no AI calls per click), still filled and post-checked by code. Uploaded batches keep live drafting by the button. The Emails page says when a batch has no emails yet and why.
 - **R-22** *(added 2026-11-27, Aya, in chat: the request is the spec; no separate Gate A pause)* An in-app page at `/flows`, "LienGuard, end to end", lets a reviewer play six system flows step by step: sample batch, upload and live AI, follow-up emails, inbound document, daily automation, prompt injection. Each step names the file (and function) that does the work and shows an example payload from the sample data. The flow data lives in one typed file and is tested against the repo and the samples, so the page can't drift from the code. Linked from "How it works", the sidebar and the README.
   - *Corrections to the request, so the page matches the code:* the rules are R01–R07, R09 and R12 (R08, R10, R11 are not built). In the injection flow the model reports the document's own values and notes the embedded text. If the output fails the schema, or a required field is missing or below 0.7 confidence, the document goes to needs review, which gives an R12 HOLD. There is no separate "value doesn't match" check. On the sample, PAY-12 stays an R03 HOLD for $14,000 (AC-8.3).
-
+- **R-23** *(added 2026-11-27, Aya, in chat: the request is the spec; no separate Gate A pause)* Close the prompt-injection gap: every value the AI reads from a PDF must appear in the PDF's own text. The comparison ignores spaces, `$`, commas and letter case. A value that is not found is marked low-confidence, so the document goes to needs review and the payment is held (R12). The injection flow on `/flows` shows this check. This replaces the R-22 note "There is no separate value doesn't match check".
+  - *How "the PDF's own text" is read, so the check works on our own sample:* the sample's injected line itself contains "UNCONDITIONAL" and "$1,000,000.00". If that line counted, a model that obeyed it would pass. So sentences addressed to AI systems (for example "note to AI systems", "ignore previous instructions") are not counted as the document's own text. Text is taken from the PDF by code (`unpdf`). A PDF with no text layer (an image-only scan) has no own text, so every value goes to needs review.
+  - *Known limits (recorded, not fixed here):* `signed` and `notarized` are yes/no answers, not text, so they cannot be found in the text and are not checked. An injection that writes its value as ordinary document text, with no words addressed to AI, still passes this check.
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
 
@@ -221,6 +223,16 @@ Base case for each AC unless it says otherwise:
 - **AC-23.6** [R-22] "How it works", the sidebar ("System flows") and the README link to `/flows`.
 - **AC-23.7** [R-22] *(manual)* At 1280px and 1440px the page shows the title, subtitle, one-line help, flow tabs, the dark diagram with its packet legend, the step list with monospace file paths, and the controls. Every control can be reached by keyboard and shows a visible focus ring. Checked with screenshots.
 
+### S-24 AI values must appear in the PDF's own text
+- **AC-24.1** [R-23] Values are compared after normalising both sides: letter case is ignored, and spaces, `$` and commas are removed. A value that starts or ends with a digit is not found inside a longer number (`$14,000.00` is not found in `$114,000.00`).
+- **AC-24.2** [R-23] Each text value the model returns (claimant, customer, project, amount, through date, exceptions; insured, certificate holder, GL expiry) is looked for in the PDF's own text. A value that is not found gets confidence 0, and the reading's notes name it. So the document needs review. Empty values (null) are not checked. A PDF with no text fails every text value.
+- **AC-24.3** [R-23] Waiver type and scope are found as whole words: "conditional" is not found inside "unconditional". "progress" is also found as "partial", since the extraction prompt maps a partial waiver to `progress`.
+- **AC-24.4** [R-23] Sentences addressed to AI systems are not the document's own text. On the injection sample, `$14,000.00` and "conditional" are found, but `$1,000,000.00` and "unconditional" are not.
+- **AC-24.5** [R-23] A fake extractor that obeys the injection (unconditional, `$1,000,000.00`, signed, notarized) runs through the real pipeline on the samples. PAY-12 stays HOLD with R12, and the injection document needs review.
+- **AC-24.6** [R-23] Every recorded sample reading (11 waivers, 6 COIs, the inbound reply) passes the check unchanged, except one value: the blurry scan's amount. That scan's PDF text reads `$11,0_`, so the recorded guess `$11,000.00` (confidence 0.42) is not found. That document was already in needs review, so every document keeps its needs-review status. *(Corrected while building on 2026-11-27: the first wording said every reading was unchanged.)* The sample batch still equals `expected.json`: 2 SAFE, 10 HOLD, $162,500 exposed, and PAY-12 an R03 HOLD for $14,000.
+- **AC-24.7** [R-23] Every way a PDF gets read goes through the check, after the extraction cache, so old cached readings are checked too. That covers `runBatch`, sample batches, the per-PDF extract route, and inbound documents.
+- **AC-24.8** [R-23] The injection flow on `/flows` has a step for this check that names `src/ai/grounding.ts` (`groundExtraction`), and its payload shows `$1,000,000.00` not found. The R-22 drift tests (AC-22.2, AC-22.3) cover it.
+
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
 - `Project(code, name, state, ownerName)`
@@ -285,6 +297,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-21 | Sample emails ready at once; clearer empty Emails page | AC-21.1–21.4 | S-19, S-20 | `src/email/recorded-writer.ts`, `src/server/batches.ts` (`BatchStore.drafts`, drafts in `createSampleBatch`), `src/view/copy.ts`, `src/app/batches/[id]/drafts/page.tsx`, `scripts/record-sample-drafts.ts`, `scripts/smoke-ai.ts` (renamed from `smoke-gemini.ts`, adds Claude, on-disk reading cache), `scripts/lib/spend.ts`, `src/email/anthropic-writer.ts` (optional usage hook), `samples/drafts/**`, `package.json`, `.gitignore` (`.cache/`), `README.md`, `docs/decisions/0009-claude-in-production.md`, `tests/unit/memory-batch-store.ts`, `tests/unit/honesty-quota.test.ts` (AC-16.1 note now names Claude) |
 | S-22 | System flows: data and drift tests | AC-22.1–22.4 | S-21 | `src/flows/flows.ts`, `tests/unit/flows.test.ts` |
 | S-23 | System flows page | AC-23.1–23.7 | S-22 | `src/flows/{player,commit,geometry}.ts`, `src/app/flows/**`, `src/components/app/flows/**`, `src/components/app-sidebar.tsx`, `src/app/about/page.tsx`, `next.config.ts`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**`, `tests/unit/flows-page.test.ts` |
+| S-24 | AI values must appear in the PDF's own text | AC-24.1–24.8 | S-22 | `src/ai/{grounding,pdf-text,grounded-extractor}.ts`, `src/pipeline/run-batch.ts`, `src/server/{batches,automation}.ts`, `src/flows/flows.ts`, `package.json`, `pnpm-lock.yaml`, `next.config.ts` (only if the PDF library needs it), `tests/unit/grounding.test.ts` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -311,7 +324,8 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
 | S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
 | S-22 | System flows: data and drift tests | S-21 | awaiting-merge |
-| S-23 | System flows page | S-22 | awaiting-merge (AC-23.7 needs sign-off) |
+| S-23 | System flows page | S-22 | awaiting-merge |
+| S-24 | AI values must appear in the PDF's own text | S-22 | awaiting-merge |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
@@ -334,3 +348,8 @@ After check round `docs/checks/2026-11-26-check-6.md` (all automated checks pass
 ### Sign-off for S-18 to S-20 (2026-11-26, Aya, in chat)
 After check round `docs/checks/2026-11-26-check-8.md` (every automated AC valid; the idempotency-key and 4 MB-cap assertions were then added), Aya accepted:
 - **AC-20.2**: manual. The automated loop is shown in the README and the home "How it works" strip (screenshot 13, now `docs/screenshots/archive/13-home.png`).
+
+### Sign-off for S-22 to S-24 (2026-11-27, Aya, in chat)
+After check rounds `docs/checks/2026-11-27-check-2.md` (S-22, S-23) and `docs/checks/2026-11-27-check-3.md` (S-24), Aya accepted:
+- **AC-23.7**: manual. Layout at 1280px and 1440px, keyboard reach and focus ring (screenshot 15).
+- **AC-24.6**: the wording amended while building. Every recorded reading passes unchanged except the blurry scan's guessed amount, whose document was already in needs review.

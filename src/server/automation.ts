@@ -8,6 +8,7 @@ import { cachedExtract } from "@/ai/cache";
 import { toDocument } from "@/ai/to-document";
 import type { AutomationStore, Deps } from "@/automation/engine";
 import { recordedOrLive } from "@/automation/reading";
+import { groundedRead } from "@/ai/grounded-extractor";
 import type { BatchInput, BatchResult } from "@/pipeline/evaluate";
 import { loadRecordedReadings } from "@/pipeline/samples";
 import { SAMPLES_DIR, dbCache, getExtractor, storedOutcome } from "./batches";
@@ -74,7 +75,8 @@ const recorded = loadRecordedReadings(SAMPLES_DIR);
 export function automationDeps(): Deps {
   const env = loadEnv();
   return {
-    read: recordedOrLive(recorded, (bytes, fileName) => cachedExtract(getExtractor(), dbCache, { bytes, fileName })),
+    // Every reading, recorded or live (after the cache), is checked against the PDF text (R-23).
+    read: groundedRead(recordedOrLive(recorded, (bytes, fileName) => cachedExtract(getExtractor(), dbCache, { bytes, fileName }))),
     sender: getSender(),
     apInbox: env.AP_INBOX ?? env.DEMO_EMAIL_OVERRIDE,
   };
