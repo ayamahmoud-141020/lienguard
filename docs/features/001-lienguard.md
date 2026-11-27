@@ -284,7 +284,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-20 | Activity timeline; loop in docs | AC-20.1–20.2 | S-18, S-19 | `src/app/batches/[id]/page.tsx`, `src/components/app/{activity,how-it-works}.tsx`, `src/view/activity.ts`, `src/app/_components/automation.tsx`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**` |
 | S-21 | Sample emails ready at once; clearer empty Emails page | AC-21.1–21.4 | S-19, S-20 | `src/email/recorded-writer.ts`, `src/server/batches.ts` (`BatchStore.drafts`, drafts in `createSampleBatch`), `src/view/copy.ts`, `src/app/batches/[id]/drafts/page.tsx`, `scripts/record-sample-drafts.ts`, `scripts/smoke-ai.ts` (renamed from `smoke-gemini.ts`, adds Claude, on-disk reading cache), `scripts/lib/spend.ts`, `src/email/anthropic-writer.ts` (optional usage hook), `samples/drafts/**`, `package.json`, `.gitignore` (`.cache/`), `README.md`, `docs/decisions/0009-claude-in-production.md`, `tests/unit/memory-batch-store.ts`, `tests/unit/honesty-quota.test.ts` (AC-16.1 note now names Claude) |
 | S-22 | System flows: data and drift tests | AC-22.1–22.4 | S-21 | `src/flows/flows.ts`, `tests/unit/flows.test.ts` |
-| S-23 | System flows page | AC-23.1–23.7 | S-22 | `src/flows/{player,commit}.ts`, `src/app/flows/**`, `src/components/app/flows/**`, `src/components/app-sidebar.tsx`, `src/app/about/page.tsx`, `next.config.ts`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**`, `tests/unit/flows-page.test.ts` |
+| S-23 | System flows page | AC-23.1–23.7 | S-22 | `src/flows/{player,commit,geometry}.ts`, `src/app/flows/**`, `src/components/app/flows/**`, `src/components/app-sidebar.tsx`, `src/app/about/page.tsx`, `next.config.ts`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**`, `tests/unit/flows-page.test.ts` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -311,7 +311,7 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
 | S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
 | S-22 | System flows: data and drift tests | S-21 | checking |
-| S-23 | System flows page | S-22 | agreed |
+| S-23 | System flows page | S-22 | checking |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
