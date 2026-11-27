@@ -50,6 +50,8 @@ For a batch of subcontractor payments, decide per payment **SAFE** or **HOLD** w
 - **R-19** *(added 2026-11-26, Aya)* The UI is based on a permissively licensed template (shadcn/ui `dashboard-01`, MIT) instead of a custom design. Logic, tests, wording, data and passcode behaviour stay unchanged.
 - **R-20** *(added 2026-11-26, Aya)* Close the loop with automation: documents arrive by an inbound endpoint, a daily job re-checks open batches, drafts reminders and sends a digest, and every automatic event shows in an activity timeline. Emails to subcontractors still always need human approval; only notifications and the digest to the AP inbox are sent automatically.
 - **R-21** *(added 2026-11-26, Aya)* Sample batches open with their follow-up emails already drafted, using wording recorded once from live AI runs (no AI calls per click), still filled and post-checked by code. Uploaded batches keep live drafting by the button. The Emails page says when a batch has no emails yet and why.
+- **R-22** *(added 2026-11-27, Aya, in chat: the request is the spec; no separate Gate A pause)* An in-app page at `/flows`, "LienGuard, end to end", lets a reviewer play six system flows step by step: sample batch, upload and live AI, follow-up emails, inbound document, daily automation, prompt injection. Each step names the file (and function) that does the work and shows an example payload from the sample data. The flow data lives in one typed file and is tested against the repo and the samples, so the page can't drift from the code. Linked from "How it works", the sidebar and the README.
+  - *Corrections to the request, so the page matches the code:* the rules are R01–R07, R09 and R12 (R08, R10, R11 are not built). In the injection flow the model reports the document's own values and notes the embedded text. If the output fails the schema, or a required field is missing or below 0.7 confidence, the document goes to needs review, which gives an R12 HOLD. There is no separate "value doesn't match" check. On the sample, PAY-12 stays an R03 HOLD for $14,000 (AC-8.3).
 
 ## 5. Acceptance criteria
 Shared values: `DEMO_TODAY = 2026-11-20`. Grace days = 5. TX requires notary; CA and AZ don't.
@@ -204,6 +206,21 @@ Base case for each AC unless it says otherwise:
 - **AC-21.3** [R-21] On a sample batch whose follow-ups all came from the recording, the Emails page shows "Sample emails were recorded from live AI runs (Gemini and Claude)." The providers it names are exactly those in the recordings. It does not show on uploaded batches or for template or reminder drafts.
 - **AC-21.4** [R-21] An Emails page with no drafts names the batch, says each batch has its own emails, and points to earlier batches under Batches, next to the "Draft follow-up emails" button.
 
+### S-22 System flows: data and drift tests
+- **AC-22.1** [R-22] `src/flows/flows.ts` defines 12 nodes (Browser/UI, API routes, Ingest, AI extractor, Matching, Rules engine, Database, Email writer + post-check, Resend, Inbound endpoint, Daily cron, AP inbox) and 6 flows in this order: sample, upload, emails, inbound, daily, injection. A Zod schema checks it: every step has one plain sentence, a packet kind (`request`, `data` or `ai`), an example payload, `from`/`to` ids of existing nodes and at least one file.
+- **AC-22.2** [R-22] Every file path in `flows.ts` exists in the repo, and every function or symbol named with it is declared in that file. A renamed or moved file fails the test.
+- **AC-22.3** [R-22] Payloads come from the sample data. Every dollar amount, payment id (`PAY-nn`), invoice number and PDF file name in a payload exists in `samples/`: the payments, the recorded readings (including the inbound reply), `expected.json`, or the injection text in `scripts/sample-scenarios.ts`.
+- **AC-22.4** [R-22] The outcomes the flows state are checked against a real pipeline run on the samples: 2 SAFE, 10 HOLD, $162,500 exposed; PAY-02 R02 HOLD with $2,000 exposed; PAY-11 R12 HOLD; PAY-12 R03 HOLD for $14,000; the corrected waiver flips PAY-02 (BLP-2201, $20,000.00) from HOLD to SAFE; on 2027-02-01 PAY-05 becomes an R09 HOLD.
+
+### S-23 System flows page
+- **AC-23.1** [R-22] The player is a pure reducer (`src/flows/player.ts`). Next and Previous stay inside the flow. Restart goes to step 1. Clicking a step jumps to it and pauses. Picking a flow starts it at step 1, paused. Play on the last step starts again from step 1. Auto-advance stops playing at the last step. Speeds are 0.5×, 1× and 2×.
+- **AC-23.2** [R-22] Keys: Space plays or pauses, ← and → step back and forward, 1–6 pick a flow. Keys pressed with Ctrl, Alt or Meta, or typed while focus is in a text field, are ignored.
+- **AC-23.3** [R-22] Only the nodes a flow uses are highlighted. `nodesInFlow` returns exactly the nodes its steps touch (sample flow: no Inbound endpoint, Daily cron, Resend or AP inbox).
+- **AC-23.4** [R-22] The footer reads "Traced from lienguard main @ <sha>. Payloads are examples from the sample data." `<sha>` is the first 7 characters of the commit the build was made from (Vercel's `VERCEL_GIT_COMMIT_SHA`, otherwise `git rev-parse HEAD`), or `unknown`.
+- **AC-23.5** [R-22] With `prefers-reduced-motion: reduce` the packet does not move: the move takes 0 ms, and the packet is shown at the step's target. Every control and key still works.
+- **AC-23.6** [R-22] "How it works", the sidebar ("System flows") and the README link to `/flows`.
+- **AC-23.7** [R-22] *(manual)* At 1280px and 1440px the page shows the title, subtitle, one-line help, flow tabs, the dark diagram with its packet legend, the step list with monospace file paths, and the controls. Every control can be reached by keyboard and shows a visible focus ring. Checked with screenshots.
+
 ## 6. Data
 - `Batch(id, name, createdAt, status)`
 - `Project(code, name, state, ownerName)`
@@ -266,6 +283,8 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-19 | Daily automation | AC-19.1–19.4 | S-18 | `src/automation/**`, `src/server/automation.ts`, `src/app/api/cron/**`, `src/app/api/batches/[id]/daily-check/**`, `vercel.json`, `src/email/**`, `src/server/drafts.ts` (follow-up vs reminder kind, `sentOn` on send, ordering), `src/app/_components/drafts.tsx` (reminder labels) |
 | S-20 | Activity timeline; loop in docs | AC-20.1–20.2 | S-18, S-19 | `src/app/batches/[id]/page.tsx`, `src/components/app/{activity,how-it-works}.tsx`, `src/view/activity.ts`, `src/app/_components/automation.tsx`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**` |
 | S-21 | Sample emails ready at once; clearer empty Emails page | AC-21.1–21.4 | S-19, S-20 | `src/email/recorded-writer.ts`, `src/server/batches.ts` (`BatchStore.drafts`, drafts in `createSampleBatch`), `src/view/copy.ts`, `src/app/batches/[id]/drafts/page.tsx`, `scripts/record-sample-drafts.ts`, `scripts/smoke-ai.ts` (renamed from `smoke-gemini.ts`, adds Claude, on-disk reading cache), `scripts/lib/spend.ts`, `src/email/anthropic-writer.ts` (optional usage hook), `samples/drafts/**`, `package.json`, `.gitignore` (`.cache/`), `README.md`, `docs/decisions/0009-claude-in-production.md`, `tests/unit/memory-batch-store.ts`, `tests/unit/honesty-quota.test.ts` (AC-16.1 note now names Claude) |
+| S-22 | System flows: data and drift tests | AC-22.1–22.4 | S-21 | `src/flows/flows.ts`, `tests/unit/flows.test.ts` |
+| S-23 | System flows page | AC-23.1–23.7 | S-22 | `src/flows/{player,commit}.ts`, `src/app/flows/**`, `src/components/app/flows/**`, `src/components/app-sidebar.tsx`, `src/app/about/page.tsx`, `next.config.ts`, `README.md`, `scripts/screenshots.ts`, `docs/screenshots/**`, `tests/unit/flows-page.test.ts` |
 
 ## 10. Stage table
 | Story | Title | Depends on | Stage |
@@ -290,7 +309,9 @@ _S-18 to S-20 file lists widened on 2026-11-26 after check report 7 to declare s
 | S-18 | Inbound documents | S-13, S-17 | merged |
 | S-19 | Daily automation | S-18 | merged |
 | S-20 | Activity timeline; loop in docs | S-18, S-19 | merged |
-| S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | awaiting-merge |
+| S-21 | Sample emails ready at once; clearer empty Emails page | S-19, S-20 | merged |
+| S-22 | System flows: data and drift tests | S-21 | agreed |
+| S-23 | System flows page | S-22 | agreed |
 
 ## 11. Sign-off on items without an automated test (2026-11-26, Aya, in chat)
 After check round 4 (`docs/checks/2026-11-26-check-2.md`), Aya accepted:
